@@ -1,11 +1,16 @@
-#include "Robot.hpp"
+#include "RobotDriver.hpp"
 #include <memory>
 
 int main(){
-    EpuckV1Driver e0();
-    Robot r0(e0);
+    
+    bool real_robot = true;
+    Robot robot;
+    std::unique_ptr<RobotDriver> driver;
+    if(real_robot) {
+        driver = std::make_unique<EPuckV2Driver>(robot);
+    } else {
+        driver = std::make_unique<EPuckVREPDriver>(robot);
+    }
 
-    
-    
 
 }
