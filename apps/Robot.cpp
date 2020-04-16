@@ -9,17 +9,17 @@ Robot::~Robot(){
 }
 
 double Robot::getValueX(){
-    return x;
+    return x_;
 }
 double Robot::getValueY(){
-    return y;
+    return y_;
 }
-double Robot::getValueZ(){
-    return z;
+double Robot::getValueTh(){
+    return theta_;
 }
 
-void Robot::setValue(double x, double y, double z){
-    this->x = x;
-    this->y = y;
-    this->z = z;
+void Robot::setValue(double x, double y, double theta){
+    x_ = x;
+    y_ = y;
+    theta_ = theta;
 }

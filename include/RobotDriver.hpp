@@ -4,48 +4,55 @@
 
 class RobotDriver{
     public:
-        RobotDriver();
-        ~RobotDriver();
+        RobotDriver(Robot& robot) : robot_(robot) {}
+        virtual ~RobotDriver() = default;
 
-        virtual void printName() = 0;
-//        virtual void init() = 0;
-//        virtual void read() = 0;
-//        virtual void moveRobot(Robot) = 0;
-//        virtual void send() = 0;
+    virtual void init() = 0;
+    virtual void read() = 0;
+    // virtual void moveRobot(Robot) = 0;
+    virtual void send() = 0;
     private:
+        Robot& robot_;
+        std::string name_;
 };
-
 
 class EPuckV1Driver : public RobotDriver {
     public:
-        EPuckV1Driver(Robot);
-        ~EPuckV1Driver();
+        EPuckV1Driver(Robot& robot) : RobotDriver(robot) {}
+        virtual ~EPuckV1Driver() = default;
 
-        void printName() override;
+        void init() override ;// TODO}
+        void read() override ;// TODO}
+        void send() override ;// TODO}
+
     private:
-        std::string name;
-        Robot robot;
-}; 
+        std::string IP;
+        std::string port;
+};
 
 class EPuckV2Driver : public RobotDriver {
     public:
-        EPuckV2Driver(Robot);
-        ~EPuckV2Driver();
+        EPuckV2Driver(Robot& robot) : RobotDriver(robot) {}
+        virtual ~EPuckV2Driver() = default;
 
-        void printName() override;
+        void init() override ;// TODO}
+        void read() override ;// TODO}
+        void send() override ;// TODO}
+
     private:
-        std::string name;
-        Robot robot;
-}; 
+        std::string IP;
+        std::string port;
+};
 
 class EPuckVREPDriver : public RobotDriver {
     public:
-        EPuckVREPDriver(Robot);
-        ~EPuckVREPDriver();
+        EPuckVREPDriver(Robot& robot) : RobotDriver(robot) {}
+        virtual ~EPuckVREPDriver() = default;
 
-        void printName() override;
+        void init() override ;// TODO}
+        void read() override ;// TODO}
+        void send() override ;// TODO}
+
     private:
-        std::string name;
-        Robot robot;
-}; 
-
+        std::string Portname;
+};

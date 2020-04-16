@@ -12,5 +12,6 @@ int main(){
         driver = std::make_unique<EPuckVREPDriver>(robot);
     }
 
+    driver->printName();
 
 }

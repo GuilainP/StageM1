@@ -13,9 +13,9 @@ class Robot {
 
         double getValueX();
         double getValueY();
-        double getValueZ();
-        void setValue(double x, double y, double z);
+        double getValueTh();
+        void setValue(double x, double y, double theta);
     private:
-        double x, y ,z;
+        double x_, y_, theta_;
         
 };
