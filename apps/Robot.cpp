@@ -8,18 +8,18 @@ Robot::~Robot(){
 
 }
 
-double Robot::getValueX(){
-    return x_;
+float Robot::getValueX(){
+    return x;
 }
-double Robot::getValueY(){
-    return y_;
+float Robot::getValueY(){
+    return y;
 }
-double Robot::getValueTh(){
-    return theta_;
+float Robot::getValueTh(){
+    return theta;
 }
 
-void Robot::setValue(double x, double y, double theta){
-    x_ = x;
-    y_ = y;
-    theta_ = theta;
+void Robot::setValue(float x, float y, float theta){
+    this->x = x;
+    this->y = y;
+    this->theta = theta;
 }

@@ -1,9 +1,8 @@
 #include "RobotDriver.hpp"
-#include <memory>
 
 int main(){
     
-    bool real_robot = true;
+    bool real_robot = false;
     Robot robot;
     std::unique_ptr<RobotDriver> driver;
     if(real_robot) {
@@ -11,7 +10,13 @@ int main(){
     } else {
         driver = std::make_unique<EPuckVREPDriver>(robot);
     }
+    
+    driver->init();
+    
 
-    driver->printName();
+    for(int i =0; i<100 ; i++)
+        driver->read();
+
+    driver->send();    
 
 }

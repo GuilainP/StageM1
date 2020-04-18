@@ -2,6 +2,10 @@
 
 #include "Robot.hpp"
 
+#include "sim/extApiPlatform.h"
+#include "sim/extApi.h"
+#include "sim/simConst.h"
+
 class RobotDriver{
     public:
         RobotDriver(Robot& robot) : robot_(robot) {}
@@ -21,9 +25,9 @@ class EPuckV1Driver : public RobotDriver {
         EPuckV1Driver(Robot& robot) : RobotDriver(robot) {}
         virtual ~EPuckV1Driver() = default;
 
-        void init() override ;// TODO}
-        void read() override ;// TODO}
-        void send() override ;// TODO}
+        void init() override { std::cout << "init V1\n";};// TODO}
+        void read() override { std::cout << "read V1\n";};// TODO}
+        void send() override { std::cout << "send V1\n";};// TODO}
 
     private:
         std::string IP;
@@ -35,9 +39,9 @@ class EPuckV2Driver : public RobotDriver {
         EPuckV2Driver(Robot& robot) : RobotDriver(robot) {}
         virtual ~EPuckV2Driver() = default;
 
-        void init() override ;// TODO}
-        void read() override ;// TODO}
-        void send() override ;// TODO}
+        void init() override { std::cout << "init V2\n";};// TODO}
+        void read() override { std::cout << "read V2\n";};// TODO}
+        void send() override { std::cout << "sen V2\n";};// TODO}
 
     private:
         std::string IP;
@@ -49,9 +53,11 @@ class EPuckVREPDriver : public RobotDriver {
         EPuckVREPDriver(Robot& robot) : RobotDriver(robot) {}
         virtual ~EPuckVREPDriver() = default;
 
-        void init() override ;// TODO}
-        void read() override ;// TODO}
-        void send() override ;// TODO}
+        void init() override ;
+        void read() override ;
+        void send() override ;
+
+        void setVelocity(simxFloat, simxFloat);
 
     private:
         std::string Portname;

@@ -9,6 +9,7 @@ project(
 
 # Declare the dependencies of this project
 #find_package(fmt REQUIRED)
+find_package( Threads )
 
 # Process the src and apps directories
 add_subdirectory(src)
