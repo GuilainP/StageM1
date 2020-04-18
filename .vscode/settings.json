@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.tcc": "cpp",
-        "extapiplatform.c": "cpp",
-        "extapi.c": "cpp",
-        "iostream": "cpp"
-    },
-    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
-}
