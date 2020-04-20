@@ -1,7 +1,8 @@
 #include "RobotDriver.hpp"
 
+
 int main(){
-    
+
     bool real_robot = false;
     Robot robot;
     std::unique_ptr<RobotDriver> driver;
@@ -14,7 +15,7 @@ int main(){
     driver->init();
     
 
-    for(int i =0; i<100 ; i++)
+    for(int i =0; i<1000 ; i++)
         driver->read();
 
     driver->send();    

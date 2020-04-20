@@ -1,6 +1,7 @@
 #pragma one
 
 #include "Robot.hpp"
+#include "datafile.hpp"
 
 #include "sim/extApiPlatform.h"
 #include "sim/extApi.h"
