@@ -1,6 +1,5 @@
 #include "RobotDriver.hpp"
 
-
 int main(){
 
     bool real_robot = false;

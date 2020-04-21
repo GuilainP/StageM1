@@ -5,24 +5,21 @@
 #include "extApi.h"
 #include "extApi.c"
 
-#define PI 3.14159
 #define TO_MS 1000
 
 void PrintSensors();
+void sensorsRange(float* sensor);
 
 int clientID(0),pingTime(0);
 int proxSensorsHandle[8];
 int ePuckHandle,sphereHandle;
 float ePuckPosition[3];
-float detectedSurfaceNormalVector[8][3];
-
+float IR0[3],IR1[3],IR2[3],IR3[3],IR4[3],IR5[3],IR6[3],IR7[3];
 int rightJointHandle(0), leftJointHandle(0);
 float rightSpeed, leftSpeed;
 
-std::ofstream fileToWrite;
-std::string filedatename;
-
 //simxFloat leftSpeed(0.0),rightSpeed(0.0);
+Logger fileToWrite;
 
 void EPuckVREPDriver::init(){
 
@@ -41,8 +38,6 @@ void EPuckVREPDriver::init(){
 	}else{
 		
 		std::cout<<("Connected to remote API server")<<std::endl;
-		filedatename = fileName();
-		
 
 		simxStartSimulation(clientID,simx_opmode_oneshot);
 
@@ -64,14 +59,16 @@ void EPuckVREPDriver::init(){
 
 
 
-		simxReadProximitySensor(clientID,proxSensorsHandle[0],NULL,NULL,NULL,detectedSurfaceNormalVector[0],simx_opmode_blocking);
-		simxReadProximitySensor(clientID,proxSensorsHandle[1],NULL,NULL,NULL,detectedSurfaceNormalVector[1],simx_opmode_blocking);
-		simxReadProximitySensor(clientID,proxSensorsHandle[2],NULL,NULL,NULL,detectedSurfaceNormalVector[2],simx_opmode_blocking);
-		simxReadProximitySensor(clientID,proxSensorsHandle[3],NULL,NULL,NULL,detectedSurfaceNormalVector[3],simx_opmode_blocking);
-		simxReadProximitySensor(clientID,proxSensorsHandle[4],NULL,NULL,NULL,detectedSurfaceNormalVector[4],simx_opmode_blocking);
-		simxReadProximitySensor(clientID,proxSensorsHandle[5],NULL,NULL,NULL,detectedSurfaceNormalVector[5],simx_opmode_blocking);
-		simxReadProximitySensor(clientID,proxSensorsHandle[6],NULL,NULL,NULL,detectedSurfaceNormalVector[6],simx_opmode_blocking);
-		simxReadProximitySensor(clientID,proxSensorsHandle[7],NULL,NULL,NULL,detectedSurfaceNormalVector[7],simx_opmode_blocking);
+		simxReadProximitySensor(clientID,proxSensorsHandle[0],NULL,NULL,NULL,IR0,simx_opmode_streaming);
+		simxReadProximitySensor(clientID,proxSensorsHandle[1],NULL,NULL,NULL,IR1,simx_opmode_streaming);
+		simxReadProximitySensor(clientID,proxSensorsHandle[2],NULL,NULL,NULL,IR2,simx_opmode_streaming);
+		simxReadProximitySensor(clientID,proxSensorsHandle[3],NULL,NULL,NULL,IR3,simx_opmode_streaming);
+		simxReadProximitySensor(clientID,proxSensorsHandle[4],NULL,NULL,NULL,IR4,simx_opmode_streaming);
+		simxReadProximitySensor(clientID,proxSensorsHandle[5],NULL,NULL,NULL,IR5,simx_opmode_streaming);
+		simxReadProximitySensor(clientID,proxSensorsHandle[6],NULL,NULL,NULL,IR6,simx_opmode_streaming);
+		simxReadProximitySensor(clientID,proxSensorsHandle[7],NULL,NULL,NULL,IR7,simx_opmode_streaming);
+
+		simxGetObjectPosition(clientID,ePuckHandle,sphereHandle,ePuckPosition,simx_opmode_streaming);
 
 		simxSetJointTargetVelocity(clientID,rightJointHandle,rightSpeed, simx_opmode_oneshot);
 		simxSetJointTargetVelocity(clientID,leftJointHandle,leftSpeed, simx_opmode_oneshot);
@@ -79,63 +76,68 @@ void EPuckVREPDriver::init(){
 }
 
 void EPuckVREPDriver::read(){
-	fileToWrite.open(filedatename, std::ios::app);
-	
-	simxGetPingTime(clientID,&pingTime);
-	std::cout<< "\n Ping = " << pingTime << " ;" << std::endl;
 
-	simxPauseCommunication(clientID,1);
 
 	simxSetJointTargetVelocity(clientID,rightJointHandle,rightSpeed, simx_opmode_oneshot);
 	simxSetJointTargetVelocity(clientID,leftJointHandle,leftSpeed, simx_opmode_oneshot);
 
-	simxPauseCommunication(clientID,0);	
+	simxSynchronousTrigger(clientID);
 
-	simxReadProximitySensor(clientID,proxSensorsHandle[0],NULL,NULL,NULL,detectedSurfaceNormalVector[0],simx_opmode_blocking);
-	simxReadProximitySensor(clientID,proxSensorsHandle[1],NULL,NULL,NULL,detectedSurfaceNormalVector[1],simx_opmode_blocking);
-	simxReadProximitySensor(clientID,proxSensorsHandle[2],NULL,NULL,NULL,detectedSurfaceNormalVector[2],simx_opmode_blocking);
-	simxReadProximitySensor(clientID,proxSensorsHandle[3],NULL,NULL,NULL,detectedSurfaceNormalVector[3],simx_opmode_blocking);
-	simxReadProximitySensor(clientID,proxSensorsHandle[4],NULL,NULL,NULL,detectedSurfaceNormalVector[4],simx_opmode_blocking);
-	simxReadProximitySensor(clientID,proxSensorsHandle[5],NULL,NULL,NULL,detectedSurfaceNormalVector[5],simx_opmode_blocking);
-	simxReadProximitySensor(clientID,proxSensorsHandle[6],NULL,NULL,NULL,detectedSurfaceNormalVector[6],simx_opmode_blocking);
-	simxReadProximitySensor(clientID,proxSensorsHandle[7],NULL,NULL,NULL,detectedSurfaceNormalVector[7],simx_opmode_blocking);
-	simxGetObjectPosition(clientID,ePuckHandle,sphereHandle,ePuckPosition,simx_opmode_blocking);
+	simxReadProximitySensor(clientID,proxSensorsHandle[0],NULL,NULL,NULL,IR0,simx_opmode_buffer);
+	simxReadProximitySensor(clientID,proxSensorsHandle[1],NULL,NULL,NULL,IR1,simx_opmode_buffer);
+	simxReadProximitySensor(clientID,proxSensorsHandle[2],NULL,NULL,NULL,IR2,simx_opmode_buffer);
+	simxReadProximitySensor(clientID,proxSensorsHandle[3],NULL,NULL,NULL,IR3,simx_opmode_buffer);
+	simxReadProximitySensor(clientID,proxSensorsHandle[4],NULL,NULL,NULL,IR4,simx_opmode_buffer);
+	simxReadProximitySensor(clientID,proxSensorsHandle[5],NULL,NULL,NULL,IR5,simx_opmode_buffer);
+	simxReadProximitySensor(clientID,proxSensorsHandle[6],NULL,NULL,NULL,IR6,simx_opmode_buffer);
+	simxReadProximitySensor(clientID,proxSensorsHandle[7],NULL,NULL,NULL,IR7,simx_opmode_buffer);
 
-	if(fileToWrite.is_open()){
-		fileToWrite << ePuckPosition[0] << ", " << ePuckPosition[1] << "\n";
-		
-	}
-			
+	simxGetObjectPosition(clientID,ePuckHandle,sphereHandle,ePuckPosition,simx_opmode_buffer);
+	
+	simxGetPingTime(clientID,&pingTime);
+	std::cout<< "\nPing = " << pingTime << " ;" << std::endl;
+
+	
+	fileToWrite.addIn(ePuckPosition[0],ePuckPosition[1]);
 	std::cout << "ePuck location : " << ePuckPosition[0] << ", " << ePuckPosition[1] << std::endl;
 	PrintSensors();
-	fileToWrite.close();
+	
 }
 
 void EPuckVREPDriver::send(){
-	
+
 	simxStopSimulation(clientID,simx_opmode_oneshot);
 	simxFinish(clientID);
 	std::cout<<"End of the program"<<std::endl;
 }
 
 void PrintSensors(){
-	for(int i = 0 ; i < 8 ;i++  )
-	{
-		if( std::abs(detectedSurfaceNormalVector[i][2]) < 0.01 ||  std::abs(detectedSurfaceNormalVector[i][2]) > 1){
-			detectedSurfaceNormalVector[i][2] = 0;
-		}
-		else{
-			detectedSurfaceNormalVector[i][2] = std::abs(detectedSurfaceNormalVector[i][2]);
-		}
-	}
+
+	sensorsRange(IR0);
+	sensorsRange(IR1);
+	sensorsRange(IR2);
+	sensorsRange(IR3);
+	sensorsRange(IR4);
+	sensorsRange(IR5);
+	sensorsRange(IR6);
+	sensorsRange(IR7);
+
 	std::cout<<std::endl;
-	std::cout << "P0 : " << detectedSurfaceNormalVector[0][2] << "\n";
-	std::cout << "P1 : " << detectedSurfaceNormalVector[1][2] << "\n";
-	std::cout << "P2 : " << detectedSurfaceNormalVector[2][2] << "\n";
-	std::cout << "P3 : " << detectedSurfaceNormalVector[3][2] << "\n";
-	std::cout << "P4 : " << detectedSurfaceNormalVector[4][2] << "\n";
-	std::cout << "P5 : " << detectedSurfaceNormalVector[5][2] << "\n";
-	std::cout << "P6 : " << detectedSurfaceNormalVector[6][2] << "\n";
-	std::cout << "P7 : " << detectedSurfaceNormalVector[7][2] << "\n"; 
+	std::cout << "P0 : " << IR0[2] << "\n";
+	std::cout << "P1 : " << IR1[2] << "\n";
+	std::cout << "P2 : " << IR2[2] << "\n";
+	std::cout << "P3 : " << IR3[2] << "\n";
+	std::cout << "P4 : " << IR4[2] << "\n";
+	std::cout << "P5 : " << IR5[2] << "\n";
+	std::cout << "P6 : " << IR6[2] << "\n";
+	std::cout << "P7 : " << IR7[2] << "\n"; 
 }
 
+void sensorsRange(float* sensor){
+	if( std::abs(sensor[2]) < 0.01 ||  std::abs(sensor[3]) > 1){
+		sensor[2] = 0;
+	}
+	else{
+		sensor[2] = std::abs(sensor[2]);
+	}
+}

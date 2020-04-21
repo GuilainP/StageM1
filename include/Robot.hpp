@@ -30,5 +30,4 @@ class Robot {
     private:
         robotParameters rb;
         float x, y, theta;
-        
 };
