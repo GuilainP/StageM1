@@ -1,4 +1,4 @@
-#pragma one
+#pragma once
 
 #include "Robot.hpp"
 #include "datafile.hpp"
@@ -12,13 +12,11 @@ class RobotDriver{
         RobotDriver(Robot& robot) : robot_(robot) {}
         virtual ~RobotDriver() = default;
 
-    virtual void init() = 0;
-    virtual void read() = 0;
-    // virtual void moveRobot(Robot) = 0;
-    virtual void send() = 0;
-    private:
+        virtual void init() = 0;
+        virtual void read() = 0;
+        //virtual void moveRobot(Robot) = 0;
+        virtual void send() = 0;
         Robot& robot_;
-        std::string name_;
 };
 
 class EPuckV1Driver : public RobotDriver {
@@ -29,8 +27,6 @@ class EPuckV1Driver : public RobotDriver {
         void init() override { std::cout << "init V1\n";};// TODO}
         void read() override { std::cout << "read V1\n";};// TODO}
         void send() override { std::cout << "send V1\n";};// TODO}
-
-    private:
         std::string IP;
         std::string port;
 };
@@ -44,22 +40,29 @@ class EPuckV2Driver : public RobotDriver {
         void read() override { std::cout << "read V2\n";};// TODO}
         void send() override { std::cout << "sen V2\n";};// TODO}
 
-    private:
         std::string IP;
         std::string port;
 };
 
 class EPuckVREPDriver : public RobotDriver {
     public:
-        EPuckVREPDriver(Robot& robot) : RobotDriver(robot) {}
-        virtual ~EPuckVREPDriver() = default;
+        EPuckVREPDriver(Robot& robot) 
+            : RobotDriver(robot) {}
+        virtual ~EPuckVREPDriver();
 
         void init() override ;
         void read() override ;
         void send() override ;
 
-        void setVelocity(simxFloat, simxFloat);
+        void setVelocity(double, double);
+        void PrintSensors();
+        void dataToRobot();
 
-    private:
         std::string Portname;
+        int clientID, pingTime;
+        int ePuckHandle,sphereHandle;
+        int rightJointHandle, leftJointHandle;
+        float ePuckPosition[3];
+        int proxSensorsHandle[8];
+        float simIR[8][3];
 };

@@ -1,5 +1,14 @@
 #include "RobotDriver.hpp"
 
+#include <csignal>
+#include <cstdint>
+
+sig_atomic_t signaled = 0;
+void exitLoop(int sig){
+    std::cout << " Loop termination\n";
+    signaled=1;
+}
+
 int main(){
 
     bool real_robot = false;
@@ -13,10 +22,14 @@ int main(){
     
     driver->init();
     
-
-    for(int i =0; i<1000 ; i++)
+    std::signal(SIGINT,exitLoop);
+    while(true){
+        if(signaled==1){
+            break;
+        }
         driver->read();
+        driver->send();
 
-    driver->send();    
+    }
 
 }

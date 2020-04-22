@@ -1,5 +1,5 @@
 # Get all the C++ files composing the hello library
-file(GLOB src_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+file(GLOB src_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.c*)
 
 # Create a shared library using these files
 add_library(src_SHARED ${src_FILES})
