@@ -8,20 +8,26 @@
 #include <ctime>
 #include <cmath>
 #include <bits/stdc++.h>
+#include <unistd.h>
 
 
 class Logger{
     public:
         Logger(){
-            file_.open(fileName());
-            system("mkdir ../logs/BONJOUR");
-            
+            folderGeneration();
+            std::cout << "done fld" << std::endl;
+            usleep(100);
+            fileGeneration();
+            std::cout << "done file" << std::endl;
             }
 
-        ~Logger(){file_.close();}
+        ~Logger();
 
-        std::string fileName(); // file name (current time)
-        void addIn(float x, float y ); // add data to file
-        std::ofstream file_;
-        std::ofstream file_ir[8];
+        void folderGeneration(); // older name (current time)
+        void fileGeneration();
+        void addIn(std::ofstream&, double); // add data to file
+
+        std::string folder_;
+        std::ofstream file_ePuckPosition[2];
+        std::ofstream file_IR[8];
 };

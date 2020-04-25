@@ -13,4 +13,4 @@ target_include_directories(src_SHARED PUBLIC ${CMAKE_SOURCE_DIR}/include/
 target_compile_features(src_SHARED PUBLIC cxx_std_17)
 
 # Link with the fmt library
-target_link_libraries( src_SHARED ${CMAKE_THREAD_LIBS_INIT} )
+target_link_libraries( src_SHARED ${CMAKE_THREAD_LIBS_INIT} ${OpenCV_LIBS})

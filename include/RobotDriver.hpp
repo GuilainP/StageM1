@@ -3,9 +3,9 @@
 #include "Robot.hpp"
 #include "datafile.hpp"
 
-#include "sim/extApiPlatform.h"
-#include "sim/extApi.h"
-#include "sim/simConst.h"
+#include "extApiPlatform.h"
+#include "extApi.h"
+#include "simConst.h"
 
 class RobotDriver{
     public:
@@ -17,6 +17,7 @@ class RobotDriver{
         //virtual void moveRobot(Robot) = 0;
         virtual void send() = 0;
         Robot& robot_;
+        Logger log_;
 };
 
 class EPuckV1Driver : public RobotDriver {
@@ -38,7 +39,7 @@ class EPuckV2Driver : public RobotDriver {
 
         void init() override { std::cout << "init V2\n";};// TODO}
         void read() override { std::cout << "read V2\n";};// TODO}
-        void send() override { std::cout << "sen V2\n";};// TODO}
+        void send() override { std::cout << "send V2\n";};// TODO}
 
         std::string IP;
         std::string port;
@@ -58,11 +59,16 @@ class EPuckVREPDriver : public RobotDriver {
         void PrintSensors();
         void dataToRobot();
 
-        std::string Portname;
+    private:
         int clientID, pingTime;
         int ePuckHandle,sphereHandle;
         int rightJointHandle, leftJointHandle;
-        float ePuckPosition[3];
         int proxSensorsHandle[8];
+        int visionHandle;int resolution[2];
+        float ePuckPosition[3];
         float simIR[8][3];
+
+        int handleCounts;
+
+        uchar** simImage;
 };

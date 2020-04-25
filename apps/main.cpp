@@ -1,7 +1,6 @@
 #include "RobotDriver.hpp"
 
-#include <csignal>
-#include <cstdint>
+
 
 sig_atomic_t signaled = 0;
 void exitLoop(int sig){
@@ -9,7 +8,7 @@ void exitLoop(int sig){
     signaled=1;
 }
 
-int main(){
+int main(int argc, char** argv){
 
     bool real_robot = false;
     Robot robot;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <cstdio>
 #include <array>
 #include <fstream>
 #include <string>
@@ -8,6 +9,11 @@
 #include <memory>
 #include <ctime>
 #include <cmath>
+#include <csignal>
+#include <cstdint>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 
 struct Pose{
     double x,y,th;
@@ -22,9 +28,7 @@ struct Proximity_sensors{
     std::array<double, 8> IR;
 };
 
-struct Vision_sensors{ // à corriger plus tard
-    double** Image;
-};
+
 
 struct robotParameters {
     const double theta[10] = {-0.2268, -0.8371, -1.5708, -2.2391, 2.2391, 1.5708,  0.8371,  0.2268,  0.35,    -0.35};
@@ -41,6 +45,6 @@ class Robot{
 
         Wheels wheels_state, wheels_command;
         Proximity_sensors proximity_sensors;
-        Vision_sensors vision_sensors;
+        cv::Mat vision_sensors;
         Pose desired_pose, current_pose;
 };
