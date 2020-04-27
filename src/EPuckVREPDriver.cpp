@@ -37,16 +37,14 @@ void EPuckVREPDriver::init(){
 
 		simxGetObjectHandle(clientID, "ePuck_camera",&visionHandle, simx_opmode_blocking);
 
-		simxGetObjectHandle(clientID, "ePuck_proxSensor1", &proxSensorsHandle[0], simx_opmode_blocking );
-		simxGetObjectHandle(clientID, "ePuck_proxSensor2", &proxSensorsHandle[1], simx_opmode_blocking );
-		simxGetObjectHandle(clientID, "ePuck_proxSensor3", &proxSensorsHandle[2], simx_opmode_blocking );
-		simxGetObjectHandle(clientID, "ePuck_proxSensor4", &proxSensorsHandle[3], simx_opmode_blocking );
-		simxGetObjectHandle(clientID, "ePuck_proxSensor5", &proxSensorsHandle[4], simx_opmode_blocking );
-		simxGetObjectHandle(clientID, "ePuck_proxSensor6", &proxSensorsHandle[5], simx_opmode_blocking );
-		simxGetObjectHandle(clientID, "ePuck_proxSensor7", &proxSensorsHandle[6], simx_opmode_blocking );
-		simxGetObjectHandle(clientID, "ePuck_proxSensor8", &proxSensorsHandle[7], simx_opmode_blocking );
-
-		simxSynchronousTrigger(clientID);
+		simxGetObjectHandle(clientID, "ePuck_proxSensor0", &proxSensorsHandle[0], simx_opmode_blocking );
+		simxGetObjectHandle(clientID, "ePuck_proxSensor1", &proxSensorsHandle[1], simx_opmode_blocking );
+		simxGetObjectHandle(clientID, "ePuck_proxSensor2", &proxSensorsHandle[2], simx_opmode_blocking );
+		simxGetObjectHandle(clientID, "ePuck_proxSensor3", &proxSensorsHandle[3], simx_opmode_blocking );
+		simxGetObjectHandle(clientID, "ePuck_proxSensor4", &proxSensorsHandle[4], simx_opmode_blocking );
+		simxGetObjectHandle(clientID, "ePuck_proxSensor5", &proxSensorsHandle[5], simx_opmode_blocking );
+		simxGetObjectHandle(clientID, "ePuck_proxSensor6", &proxSensorsHandle[6], simx_opmode_blocking );
+		simxGetObjectHandle(clientID, "ePuck_proxSensor7", &proxSensorsHandle[7], simx_opmode_blocking );
 
 		simxReadProximitySensor(clientID,proxSensorsHandle[0],NULL,NULL,NULL,simIR[0],simx_opmode_streaming);
 		simxReadProximitySensor(clientID,proxSensorsHandle[1],NULL,NULL,NULL,simIR[1],simx_opmode_streaming);
@@ -57,17 +55,19 @@ void EPuckVREPDriver::init(){
 		simxReadProximitySensor(clientID,proxSensorsHandle[6],NULL,NULL,NULL,simIR[6],simx_opmode_streaming);
 		simxReadProximitySensor(clientID,proxSensorsHandle[7],NULL,NULL,NULL,simIR[7],simx_opmode_streaming);
 
+		
 		simxGetObjectPosition(clientID,ePuckHandle,sphereHandle,ePuckPosition,simx_opmode_streaming);
-		//simxGetVisionSensorImage(clientID,visionHandle,resolution,simImage,0,simx_opmode_streaming);
+		simxGetVisionSensorImage(clientID,visionHandle,res,&simImage,0,simx_opmode_streaming);
 
-		simxGetPingTime(clientID,&pingTime);
+		usleep(10*TO_MS);
+
     }
 }
 
 void EPuckVREPDriver::read(){
 
 	simxSynchronousTrigger(clientID);
-
+	
 	simxReadProximitySensor(clientID,proxSensorsHandle[0],NULL,NULL,NULL,simIR[0],simx_opmode_buffer);
 	simxReadProximitySensor(clientID,proxSensorsHandle[1],NULL,NULL,NULL,simIR[1],simx_opmode_buffer);
 	simxReadProximitySensor(clientID,proxSensorsHandle[2],NULL,NULL,NULL,simIR[2],simx_opmode_buffer);
@@ -77,17 +77,33 @@ void EPuckVREPDriver::read(){
 	simxReadProximitySensor(clientID,proxSensorsHandle[6],NULL,NULL,NULL,simIR[6],simx_opmode_buffer);
 	simxReadProximitySensor(clientID,proxSensorsHandle[7],NULL,NULL,NULL,simIR[7],simx_opmode_buffer);
 
+	
+
 	simxGetObjectPosition(clientID,ePuckHandle,sphereHandle,ePuckPosition,simx_opmode_buffer);
 
-	//simxGetVisionSensorImage(clientID,visionHandle,resolution,simImage,0,simx_opmode_buffer);
-	
-	
-	//std::cout<< "\nPing = " << pingTime << " ;\n" << std::endl;
+	simxGetVisionSensorImage(clientID, visionHandle, res,&simImage, 0, simx_opmode_buffer);
+
+	simxGetPingTime(clientID,&pingTime);
+
+	cv::Mat img(res[0], res[1], CV_8UC3, (unsigned char*) simImage);
+	cv::flip(img,robot_.vision_sensors,0);
+
+	std::cout << res[0] << "x" << res[1] << "\n";  
+	std::cout << sizeof(simImage) / sizeof(simImage[0]) << "\n";  
+	std::cout << sizeof(simImage[0]) / sizeof(uchar) << "\n"; 
+
+	std::string fichier = "../logs/" +  std::to_string(ajouter);
+	fichier = fichier + ".jpg";
+    cv::imwrite(fichier, robot_.vision_sensors);
+	cv::imshow("fichier", robot_.vision_sensors);
+    cv::waitKey(1);
+
+	++ajouter;
 
 	PrintSensors();
 
 
-	simxGetPingTime(clientID,&pingTime);
+	
 }
 void EPuckVREPDriver::send(){
 	simxPauseCommunication(clientID,1);
@@ -97,10 +113,7 @@ void EPuckVREPDriver::send(){
 }
 
 EPuckVREPDriver::~EPuckVREPDriver(){
-	simxPauseSimulation(clientID,simx_opmode_blocking);
-	usleep(1000);
-	simxStopSimulation(clientID,simx_opmode_oneshot);
-	usleep(1000);
+	simxStopSimulation(clientID,simx_opmode_blocking);
 	simxFinish(clientID);
 	std::cout<<"End of the program"<<std::endl;
 }
@@ -110,6 +123,7 @@ void EPuckVREPDriver::PrintSensors(){
 
 	std::cout << "ePuck location : " << robot_.current_pose.x << ", " << robot_.current_pose.y << std::endl;
 	std::cout<<std::endl;
+
 	std::cout << "P0 : " << robot_.proximity_sensors.IR[0] << "\n";
 	std::cout << "P1 : " << robot_.proximity_sensors.IR[1] << "\n";
 	std::cout << "P2 : " << robot_.proximity_sensors.IR[2] << "\n";
@@ -130,6 +144,9 @@ void EPuckVREPDriver::PrintSensors(){
 	log_.addIn(log_.file_IR[5],robot_.proximity_sensors.IR[5]);
 	log_.addIn(log_.file_IR[6],robot_.proximity_sensors.IR[6]);
 	log_.addIn(log_.file_IR[7],robot_.proximity_sensors.IR[7]);
+
+	
+	
 }
 
 void EPuckVREPDriver::dataToRobot(){
@@ -144,3 +161,4 @@ void EPuckVREPDriver::dataToRobot(){
 	robot_.current_pose.x = ePuckPosition[0];
 	robot_.current_pose.y = ePuckPosition[1];
 }
+

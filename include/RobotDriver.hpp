@@ -48,7 +48,7 @@ class EPuckV2Driver : public RobotDriver {
 class EPuckVREPDriver : public RobotDriver {
     public:
         EPuckVREPDriver(Robot& robot) 
-            : RobotDriver(robot) {}
+            : RobotDriver(robot), ajouter(1) {}
         virtual ~EPuckVREPDriver();
 
         void init() override ;
@@ -64,11 +64,13 @@ class EPuckVREPDriver : public RobotDriver {
         int ePuckHandle,sphereHandle;
         int rightJointHandle, leftJointHandle;
         int proxSensorsHandle[8];
-        int visionHandle;int resolution[2];
+        int visionHandle;int res[2];
         float ePuckPosition[3];
         float simIR[8][3];
 
         int handleCounts;
 
-        uchar** simImage;
+        simxUChar* simImage;
+        int ajouter;
+
 };

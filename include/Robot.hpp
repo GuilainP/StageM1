@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <cstdlib>
 #include <array>
 #include <fstream>
 #include <string>
@@ -40,7 +41,9 @@ struct robotParameters {
 
 class Robot{
     public:
-        Robot(){std::cout << "Robot CONSTRUCTED" << std::endl;}
+        Robot(){std::cout << "Robot CONSTRUCTED" << std::endl;
+        vision_sensors = cv::Mat(128,128,CV_8UC1);}
+
         ~Robot(){std::cout << "Robot DESTRUCTED" << std::endl;}
 
         Wheels wheels_state, wheels_command;
