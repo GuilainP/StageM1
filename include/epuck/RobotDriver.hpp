@@ -75,10 +75,8 @@ private:
     int visionHandle;
     int res[2];
     float ePuckPosition[3];
-    float simIR[8][3];
-
+    uint8_t detectionStateIR[8];
+    float detectedPointIR[8][3];
     uint8_t* simImage;
-    uint8_t detectionState[8];
-    float detectedPoint[8][3];
     int ajouter;
 };
