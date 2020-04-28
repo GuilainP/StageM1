@@ -12,6 +12,7 @@ public:
     virtual void init() = 0;
     virtual void read() = 0;
     virtual void send() = 0;
+    virtual void getImage(Robot& robot) = 0;
 
     Robot& robot();
     Logger& log();
@@ -29,6 +30,7 @@ public:
     void init() override;
     void read() override;
     void send() override;
+    void getImage(Robot& robot) override ;
 
 private:
     std::string IP;
@@ -43,6 +45,7 @@ public:
     void init() override;
     void read() override;
     void send() override;
+    void getImage(Robot& robot) override ;
 
 private:
     std::string IP;
@@ -57,10 +60,12 @@ public:
     void init() override;
     void read() override;
     void send() override;
+    void getImage(Robot& robot) override ;
 
     void setVelocity(double, double);
     void PrintSensors();
     void dataToRobot();
+    
 
 private:
     int clientID, pingTime;
@@ -72,8 +77,8 @@ private:
     float ePuckPosition[3];
     float simIR[8][3];
 
-    int handleCounts;
-
     uint8_t* simImage;
+    uint8_t detectionState[8];
+    float detectedPoint[8][3];
     int ajouter;
 };

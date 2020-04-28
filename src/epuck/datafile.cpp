@@ -8,10 +8,8 @@
 
 Logger::Logger() {
     folderGeneration();
-    std::cout << "done fld" << std::endl;
     std::this_thread::sleep_for(std::chrono::microseconds(100));
     fileGeneration();
-    std::cout << "done file" << std::endl;
 }
 
 Logger::~Logger() {

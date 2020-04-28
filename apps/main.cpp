@@ -2,6 +2,7 @@
 
 #include <csignal>
 #include <iostream>
+#include <memory>
 
 sig_atomic_t signaled = 0;
 void exitLoop(int sig) {
@@ -20,6 +21,13 @@ int main(int argc, char** argv) {
         driver = std::make_unique<EPuckVREPDriver>(robot);
     }
 
+    std::cout << "Target Velocity : \n "
+              << "Left Speed : ";
+    std::cin >> robot.wheels_command.left_velocity;
+    std::cout << "Right Speed : ";
+    std::cin >> robot.wheels_command.right_velocity;
+    std::cout << std::endl;
+
     driver->init();
 
     std::signal(SIGINT, exitLoop);
@@ -27,7 +35,12 @@ int main(int argc, char** argv) {
         if (signaled == 1) {
             break;
         }
+
         driver->read();
+
+        driver->getImage(robot);
+        
         driver->send();
+
     }
 }

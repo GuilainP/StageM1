@@ -19,3 +19,8 @@ void EPuckV1Driver::read() {
 void EPuckV1Driver::send() {
     std::cout << "send V1\n";
 };
+
+// TODO
+void EPuckV1Driver::getImage(Robot& robot) {
+    std::cout << "Image V1\n";
+}
