@@ -2,9 +2,6 @@
 
 #include "extApiPlatform.h"
 #include <stdio.h>
-
-
-
 #ifndef DO_NOT_USE_SHARED_MEMORY
 #include "shared_memory.h"
 #endif
