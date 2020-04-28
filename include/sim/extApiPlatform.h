@@ -1,12 +1,6 @@
 #ifndef _EXTAPIPLATFORM__
 #define _EXTAPIPLATFORM__
 
-
-
-#define MAX_EXT_API_CONNECTIONS 255
-#define NON_MATLAB_PARSING
-#define DO_NOT_USE_SHARED_MEMORY
-
 #ifdef __cplusplus
 extern "C" {
 #endif

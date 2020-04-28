@@ -5,12 +5,12 @@ project(
     cmake_cpp_project
     VERSION 1.0
     DESCRIPTION "A CMake/C++ template project"
-    LANGUAGES CXX)
+    LANGUAGES C CXX)
 
 # Declare the dependencies of this project
 #find_package(fmt REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package( Threads )
+find_package(Threads REQUIRED)
 
 # Process the src and apps directories
 add_subdirectory(src)
