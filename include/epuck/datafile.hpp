@@ -13,6 +13,12 @@ public:
     void addIn(std::ofstream&, double); // add data to file
 
     std::string folder_;
-    std::ofstream file_ePuckPosition[2];
+    std::ofstream file_ePuckPose[3]; // x, y, th
     std::ofstream file_IR[8];
+    std::ofstream file_ePuckLeftWheelPosition;
+    std::ofstream file_ePuckRightWheelPosition;
+    std::ofstream file_ePuckLeftWheelVelocity;
+    std::ofstream file_ePuckRightWheelVelocity;
+
+
 };

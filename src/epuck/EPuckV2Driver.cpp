@@ -21,6 +21,6 @@ void EPuckV2Driver::send() {
 };
 
 // TODO
-void EPuckV2Driver::getImage(Robot& robot) {
+void EPuckV2Driver::getVisionSensor(Robot& robot) {
     std::cout << "Image V2\n";
 }

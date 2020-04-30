@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     std::cout << std::endl;
 
     driver->init();
-
+    
     std::signal(SIGINT, exitLoop);
     while (true) {
         if (signaled == 1) {
@@ -38,9 +38,11 @@ int main(int argc, char** argv) {
 
         driver->read();
 
-        driver->getImage(robot);
-        
+        driver->getVisionSensor(robot);
+
         driver->send();
+
+        
 
     }
 }

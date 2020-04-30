@@ -12,7 +12,7 @@ public:
     virtual void init() = 0;
     virtual void read() = 0;
     virtual void send() = 0;
-    virtual void getImage(Robot& robot) = 0;
+    virtual void getVisionSensor(Robot& robot) = 0;
 
     Robot& robot();
     Logger& log();
@@ -30,7 +30,7 @@ public:
     void init() override;
     void read() override;
     void send() override;
-    void getImage(Robot& robot) override ;
+    void getVisionSensor(Robot& robot) override ;
 
 private:
     std::string IP;
@@ -45,7 +45,7 @@ public:
     void init() override;
     void read() override;
     void send() override;
-    void getImage(Robot& robot) override ;
+    void getVisionSensor(Robot& robot) override ;
 
 private:
     std::string IP;
@@ -60,7 +60,7 @@ public:
     void init() override;
     void read() override;
     void send() override;
-    void getImage(Robot& robot) override ;
+    void getVisionSensor(Robot& robot) override ;
 
     void setVelocity(double, double);
     void PrintSensors();
@@ -69,14 +69,20 @@ public:
 
 private:
     int clientID, pingTime;
-    int ePuckHandle, sphereHandle;
+    int ePuckHandle;
     int rightJointHandle, leftJointHandle;
     int proxSensorsHandle[8];
     int visionHandle;
     int res[2];
     float ePuckPosition[3];
+    float leftJointPosition, rightJointPosition;
+    float leftJointVelocity[3], rightJointVelocity[3];
+    float eulerAngles[3];
     uint8_t detectionStateIR[8];
     float detectedPointIR[8][3];
     uint8_t* simImage;
     int ajouter;
+
+
+    float max_,min_;
 };

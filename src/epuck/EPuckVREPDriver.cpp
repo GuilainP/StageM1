@@ -32,7 +32,7 @@
 #define COLOR_COUT_CYAN_BRIGHT "\033[1;36m"
 #define COLOR_COUT_WHITE_BRIGHT "\033[1;37m"
 
-EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter(1) {
+EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter(1) , max_(0.0), min_(0.0) {
 }
 
 void EPuckVREPDriver::init() {
@@ -51,7 +51,6 @@ void EPuckVREPDriver::init() {
 
         // Handles
         simxGetObjectHandle(clientID, "ePuck", &ePuckHandle, simx_opmode_blocking);
-        simxGetObjectHandle(clientID, "Sphere", &sphereHandle, simx_opmode_blocking);
 
         simxGetObjectHandle(clientID, "ePuck_rightJoint", &rightJointHandle, simx_opmode_blocking);
         simxGetObjectHandle(clientID, "ePuck_leftJoint", &leftJointHandle, simx_opmode_blocking);
@@ -76,8 +75,18 @@ void EPuckVREPDriver::init() {
         simxReadProximitySensor(clientID, proxSensorsHandle[6],&detectionStateIR[6],detectedPointIR[6], NULL,NULL, simx_opmode_streaming);
         simxReadProximitySensor(clientID, proxSensorsHandle[7],&detectionStateIR[7],detectedPointIR[7], NULL,NULL, simx_opmode_streaming);
 
-        simxGetObjectPosition(clientID, ePuckHandle, sphereHandle, ePuckPosition, simx_opmode_streaming);
+        simxGetObjectPosition(clientID, ePuckHandle, -1, ePuckPosition, simx_opmode_streaming);
+        simxGetObjectOrientation(clientID, ePuckHandle, -1, eulerAngles, simx_opmode_streaming);
+
         simxGetVisionSensorImage(clientID, visionHandle, res, &simImage, 0, simx_opmode_streaming);
+
+        simxGetJointPosition(clientID, leftJointHandle, &leftJointPosition, simx_opmode_streaming);
+        simxGetJointPosition(clientID, leftJointHandle, &rightJointPosition, simx_opmode_streaming);
+
+        simxGetObjectVelocity(clientID, leftJointHandle, NULL, leftJointVelocity, simx_opmode_streaming);
+        simxGetObjectVelocity(clientID, rightJointHandle, NULL, rightJointVelocity, simx_opmode_streaming);
+
+       
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -98,9 +107,19 @@ void EPuckVREPDriver::read() {
     simxReadProximitySensor(clientID, proxSensorsHandle[6],&detectionStateIR[6],detectedPointIR[6],NULL, NULL, simx_opmode_buffer);
     simxReadProximitySensor(clientID, proxSensorsHandle[7],&detectionStateIR[7],detectedPointIR[7],NULL, NULL, simx_opmode_buffer);
 
-    simxGetObjectPosition(clientID, ePuckHandle, sphereHandle, ePuckPosition, simx_opmode_buffer);
+    simxGetObjectPosition(clientID, ePuckHandle, -1, ePuckPosition, simx_opmode_buffer);
+    simxGetObjectOrientation(clientID, ePuckHandle, -1, eulerAngles, simx_opmode_buffer);
 
     simxGetVisionSensorImage(clientID, visionHandle, res, &simImage, 0, simx_opmode_buffer);
+
+    simxGetJointPosition(clientID, leftJointHandle, &leftJointPosition, simx_opmode_buffer);
+    simxGetJointPosition(clientID, leftJointHandle, &rightJointPosition, simx_opmode_buffer);
+
+    simxGetObjectVelocity(clientID, leftJointHandle, NULL, leftJointVelocity, simx_opmode_buffer);
+    simxGetObjectVelocity(clientID, rightJointHandle, NULL, rightJointVelocity, simx_opmode_buffer);
+
+    
+
 
     simxGetPingTime(clientID, &pingTime);
 
@@ -115,7 +134,7 @@ void EPuckVREPDriver::send() {
     simxPauseCommunication(clientID, 0);
 }
 
-void EPuckVREPDriver::getImage(Robot& robot) {
+void EPuckVREPDriver::getVisionSensor(Robot& robot) {
 	cv::Mat img(res[0], res[1], CV_8UC3, (unsigned char*) simImage);
 	cv::flip(img, robot.vision_sensors, 0);
     cv::cvtColor(robot.vision_sensors, robot.vision_sensors, CV_BGR2RGB);
@@ -123,10 +142,8 @@ void EPuckVREPDriver::getImage(Robot& robot) {
 	cv::imshow("Camera", robot.vision_sensors);
 	cv::waitKey(1);
 
-	if(ajouter%2 == 0){
-		cv::imwrite(log().folder_ + "/image/" +  std::to_string(ajouter/2) + ".jpg", robot.vision_sensors);
+	cv::imwrite(log().folder_ + "/image/" +  std::to_string(ajouter/2) + ".png", robot.vision_sensors);
 
-	}
 	++ajouter;
 }
 
@@ -139,8 +156,10 @@ EPuckVREPDriver::~EPuckVREPDriver() {
 void EPuckVREPDriver::PrintSensors() {
     dataToRobot();
 
-    std::cout << "ePuck location : " << robot().current_pose.x << ", " << robot().current_pose.y << std::endl;
-    std::cout << std::endl;
+    std::cout << "ePuck location : " << robot().current_pose.x << ", " << robot().current_pose.y << ", " << robot().current_pose.th << "\n"
+              << "Position : " << robot().wheels_state.left_position << ", " << robot().wheels_state.right_position << "\n"
+              << "Velocity : "  << robot().wheels_state.left_velocity << ", " << robot().wheels_state.right_velocity << std::endl;
+
 
     if(detectionStateIR[0]!=0) {
         std::cout << "P0 : " << robot().proximity_sensors.IR[0] << "\n";
@@ -199,9 +218,9 @@ void EPuckVREPDriver::PrintSensors() {
         std::cout << COLOR_COUT_BLACK << "P7 : NONE" << COLOR_COUT_RESET << "\n";
     }
        
-
-    log().addIn(log().file_ePuckPosition[0], ePuckPosition[0]);
-    log().addIn(log().file_ePuckPosition[1], ePuckPosition[1]);
+    log().addIn(log().file_ePuckPose[0], robot().current_pose.x);
+    log().addIn(log().file_ePuckPose[1], robot().current_pose.y);
+    log().addIn(log().file_ePuckPose[2], robot().current_pose.th);
 
     log().addIn(log().file_IR[0], robot().proximity_sensors.IR[0]);
     log().addIn(log().file_IR[1], robot().proximity_sensors.IR[1]);
@@ -211,16 +230,38 @@ void EPuckVREPDriver::PrintSensors() {
     log().addIn(log().file_IR[5], robot().proximity_sensors.IR[5]);
     log().addIn(log().file_IR[6], robot().proximity_sensors.IR[6]);
     log().addIn(log().file_IR[7], robot().proximity_sensors.IR[7]);
+
+    log().addIn(log().file_ePuckLeftWheelPosition, robot().wheels_state.left_position);
+    log().addIn(log().file_ePuckRightWheelPosition, robot().wheels_state.right_position);
+
+    log().addIn(log().file_ePuckLeftWheelVelocity, robot().wheels_state.left_velocity);
+    log().addIn(log().file_ePuckRightWheelVelocity, robot().wheels_state.right_velocity);
+
 }
 
 void EPuckVREPDriver::dataToRobot() {
     for (int i = 0; i < 8; i++) {
-        if (std::abs(detectedPointIR[i][2]) < 0.01 || std::abs(detectedPointIR[i][2]) > 1) {
-            robot().proximity_sensors.IR[i] = 0;
-        } else {
-            robot().proximity_sensors.IR[i] = std::abs(detectedPointIR[i][2]);
+        if(detectionStateIR[i]!=0){
+            if (std::abs(detectedPointIR[i][2]) < 0.01 || std::abs(detectedPointIR[i][2]) > 1) {
+                robot().proximity_sensors.IR[i] = 0;
+                } else {
+                    robot().proximity_sensors.IR[i] = std::abs(detectedPointIR[i][2]);
+                }
         }
+        else {
+            robot().proximity_sensors.IR[i] = -1;
+        }
+
     }
+
+    robot().wheels_state.left_velocity = leftJointVelocity[0];
+    robot().wheels_state.right_velocity= rightJointVelocity[0];
+
     robot().current_pose.x = ePuckPosition[0];
     robot().current_pose.y = ePuckPosition[1];
+    robot().current_pose.th = eulerAngles[1];
+
+    robot().wheels_state.left_position = leftJointPosition;
+    robot().wheels_state.right_position = rightJointPosition;
+    
 }

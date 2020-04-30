@@ -34,3 +34,5 @@ public:
     Pose desired_pose, current_pose;
     cv::Mat vision_sensors;
 };
+// current_pose.th [-pi/2;pi/2]
+// wheels_state.*_position [-pi, pi]
