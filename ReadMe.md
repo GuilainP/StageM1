@@ -2,43 +2,41 @@
 
 Guide
 
-Requis :
-Simulation:
-Le logiciel CoppeliaSim  (version EDU) pour linux sur votre machine: https://www.coppeliarobotics.com/downloads
+#### Requis :
 
-La librairie Open CV : https://www.learnopencv.com/install-opencv-4-on-ubuntu-18-04/
+* Pour la simulation, le logiciel [CoppeliaSim](https://www.coppeliarobotics.com/downloads)  (version EDU) pour linux.
 
-CMake : Taper dans votre terminal : 
+* La librairie [Open CV](https://www.learnopencv.com/install-opencv-4-on-ubuntu-18-04/)
 
-    sudo apt-get update
-    sudo apt-get upgrade
-    sudo apt-get install cmake
+* Le logiciel [CMake](https://cmake.org/)
+
 
 
 Ensuite, télécharger le dossier directement depuis le site , ou le cloner en appliquant cette commande dans le terminal:
 
-    git clone https://github.com/GuilainP/StageM1.git
+    $ git clone https://github.com/GuilainP/StageM1.git
 
-Lancer CoppeliaSim et ouvrir la scène e-puck.ttt contenue dans le dossier StageM1/ 
+Lancer CoppeliaSim et ouvrir la scène `e-puck.ttt` contenue dans le dossier StageM1/ 
 
 Se rendre dans le dossier StageM1/build/ et faire les commandes suivantes:
 
-    cmake ..
-    make
+    $ cmake ..
+    $ make
 
 Pour lancer l'application taper :
 
-    ./apps/robot
+    $ ./apps/robot
 
 
 Application : 
 
 Un dossier est crée pour les données récoltées:
+
 ![](logs_tree.png)
 
 Cette application permet de faire bouger l' e-puck et de récolter différentes observations.
 
-Pour arrêter le programme , taper ctrl + c dans le terminal;
+Pour arrêter le programme , taper ctrl + c dans le terminal.
 
 
 
