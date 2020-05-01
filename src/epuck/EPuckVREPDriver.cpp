@@ -32,7 +32,7 @@
 #define COLOR_COUT_CYAN_BRIGHT "\033[1;36m"
 #define COLOR_COUT_WHITE_BRIGHT "\033[1;37m"
 
-EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter(1) , max_(0.0), min_(0.0) {
+EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter(1) {
 }
 
 void EPuckVREPDriver::init() {

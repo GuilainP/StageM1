@@ -82,7 +82,4 @@ private:
     float detectedPointIR[8][3];
     uint8_t* simImage;
     int ajouter;
-
-
-    float max_,min_;
 };
