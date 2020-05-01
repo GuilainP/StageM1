@@ -39,19 +39,20 @@ void Logger::folderGeneration() {
     ti = localtime(&current_time);
     std::string timeString = asctime(ti);
 
-    std::string month;
-    if(ti->tm_mon < 10){
-        month = "0" + std::to_string(ti->tm_mon + 1) ;
-    }
+    std::string month, day, hour, minute, sec;
+    ti->tm_mon < 10 ? month = "0" + std::to_string(ti->tm_mon + 1) : month = std::to_string(ti->tm_mon +1);
+    ti->tm_mday < 10 ? day = "0" + std::to_string(ti->tm_mday) : day = std::to_string(ti->tm_mday);
+    ti->tm_hour < 10 ? hour = "0" + std::to_string(ti->tm_hour) : hour = std::to_string(ti->tm_hour);
+    ti->tm_min < 10 ? minute = "0" + std::to_string(ti->tm_min) : minute = std::to_string(ti->tm_min);
+    ti->tm_sec < 10 ? sec = "0" + std::to_string(ti->tm_sec) : sec = std::to_string(ti->tm_sec);
 
     // YYYY_MM_DD-hh:mm:ss
     timeString = std::to_string(ti->tm_year+1900) + '_' + 
-           month + '_' + 
-           std::to_string(ti->tm_mday) + '-' + 
-           std::to_string(ti->tm_hour) + ':' + 
-           std::to_string(ti->tm_min) + ':' +
-           std::to_string(ti->tm_sec) ;
-           
+                                month + '_' + 
+                                day + '-' + 
+                                hour + ':' + 
+                                minute + ':' +
+                                sec ;
     std::cout << timeString << std::endl;
 
     folder_ = "../logs/" + timeString;
