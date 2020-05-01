@@ -34,7 +34,7 @@
 
 EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter(1) {
 }
-
+ 
 void EPuckVREPDriver::init() {
     clientID = simxStart((simxChar*)"127.0.0.1", 19997, true, true, 2000, 5);
     std::cout << "clientID = " << clientID << std::endl;
