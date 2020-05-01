@@ -16,6 +16,7 @@ CMake : Taper dans votre terminal :
 
 
 Ensuite, télécharger le dossier directement depuis le site , ou le cloner en appliquant cette commande dans le terminal:
+
     git clone https://github.com/GuilainP/StageM1.git
 
 Lancer CoppeliaSim et ouvrir la scène e-puck.ttt contenue dans le dossier StageM1/ 
