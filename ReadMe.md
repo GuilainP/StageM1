@@ -1,8 +1,6 @@
-# Petemoya Guilain
+# Guide d'installation
 
-Guide
-
-#### Requis :
+### Prérequis :
 
 * Pour la simulation, le logiciel [CoppeliaSim](https://www.coppeliarobotics.com/downloads)  (version EDU) pour linux.
 
@@ -11,8 +9,9 @@ Guide
 * Le logiciel [CMake](https://cmake.org/)
 
 
+### Installation
 
-Ensuite, télécharger le dossier directement depuis le site , ou le cloner en appliquant cette commande dans le terminal:
+Télécharger le dossier directement depuis le site , ou le cloner en appliquant cette commande dans le terminal:
 
     $ git clone https://github.com/GuilainP/StageM1.git
 
@@ -34,9 +33,12 @@ Un dossier est crée pour les données récoltées:
 
 ![](logs_tree.png)
 
-Cette application permet de faire bouger l' e-puck et de récolter différentes observations.
+Cette application permet de faire bouger l' e-puck et de récolter les mesures des différents capteurs.
 
 Pour arrêter le programme , taper ctrl + c dans le terminal.
+
+    L' e-puck de la scène a était modifié pour mieux correspondre au robot réel.
+    Vous avez la liberté de modifier la scène pour faire vos propres observation.
 
 
 
