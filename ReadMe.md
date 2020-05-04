@@ -4,19 +4,19 @@
 
 * Pour la simulation, le logiciel [CoppeliaSim](https://www.coppeliarobotics.com/downloads)  (version EDU) pour linux.
 ```sh
-    # extraire le fichier
-    $ tar -xf CoppeliaSim_Edu_V4_0_0_Ubuntu18_04.tar.xz
-    # déplacement dans le dossier home/
-    $ mv CoppeliaSim_Edu_V4_0_0_Ubuntu18_04 ~
-    # lancement de l'application
-    $ ~/CoppeliaSim_Edu_V4_0_0_Ubuntu18_04/coppeliaSim.sh
+# extraire le fichier
+$ tar -xf CoppeliaSim_Edu_V4_0_0_Ubuntu18_04.tar.xz
+# déplacement dans le dossier home/
+$ mv CoppeliaSim_Edu_V4_0_0_Ubuntu18_04 ~
+# lancement de l'application
+$ ~/CoppeliaSim_Edu_V4_0_0_Ubuntu18_04/coppeliaSim.sh
 ```
 
 * La librairie [Open CV](https://www.learnopencv.com/install-opencv-4-on-ubuntu-18-04/)
 
 * Le logiciel [CMake](https://cmake.org/)
 ```sh
-    sudo apt install cmake
+sudo apt install cmake
 ```
 
 ### Installation
