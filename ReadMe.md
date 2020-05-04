@@ -60,8 +60,8 @@ Cette application permet de faire bouger l' e-puck et de récolter les mesures d
 
 Pour arrêter le programme , taper ctrl + c dans le terminal.
 
-    L' e-puck de la scène a était modifié pour mieux correspondre au robot réel.
-    Vous avez la liberté de modifier la scène pour faire vos propres observation.
+L' e-puck de la scène a été modifié pour mieux correspondre au robot réel.
+Vous avez la liberté de modifier la scène pour faire vos propres observations.
 
 
 
