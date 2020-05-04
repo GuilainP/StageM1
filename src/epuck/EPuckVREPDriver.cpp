@@ -44,7 +44,8 @@ void EPuckVREPDriver::init() {
         std::cout << ("Could not connect to V-REP remote API server") << std::endl;
         simxFinish(clientID);
     } else {
-
+        minr = 0; minl =0;
+        maxr = 0; maxl = 0;
         std::cout << ("Connected to remote API server") << std::endl;
 
         simxSynchronous(clientID, true);
@@ -156,10 +157,21 @@ EPuckVREPDriver::~EPuckVREPDriver() {
 
 void EPuckVREPDriver::PrintSensors() {
     dataToRobot();
+    if(robot().wheels_state.left_position < minl)
+        minl = robot().wheels_state.left_position;
+    if(robot().wheels_state.left_position > maxl)
+        maxl = robot().wheels_state.left_position;
+    if(robot().wheels_state.right_position < minr)
+        minr = robot().wheels_state.right_position;
+    if(robot().wheels_state.right_position > maxr)
+        maxr = robot().wheels_state.right_position;  
+
 
     std::cout << "ePuck location : " << robot().current_pose.x << ", " << robot().current_pose.y << ", " << robot().current_pose.th << "\n"
               << "Position : " << robot().wheels_state.left_position << ", " << robot().wheels_state.right_position << "\n"
               << "Velocity : "  << robot().wheels_state.left_velocity << ", " << robot().wheels_state.right_velocity << std::endl;
+    std::cout << "Min left  : " << minl << " | Max left  : " << maxl << " \n" 
+              << "Min right : " << minr << " | Max right : " << maxr << std::endl;
 
 
     if(detectionStateIR[0]!=0) {
@@ -262,7 +274,7 @@ void EPuckVREPDriver::dataToRobot() {
     robot().current_pose.y = ePuckPosition[1];
     robot().current_pose.th = eulerAngles[1];
 
-    robot().wheels_state.left_position = leftJointPosition;
-    robot().wheels_state.right_position = rightJointPosition;
+    robot().wheels_state.left_position = abs(leftJointPosition);
+    robot().wheels_state.right_position = abs(rightJointPosition);
     
 }
