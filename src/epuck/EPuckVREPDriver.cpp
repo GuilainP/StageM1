@@ -95,7 +95,6 @@ void EPuckVREPDriver::init() {
 }
 
 
-int rec1,rec2,rec3,rec4;
 void EPuckVREPDriver::read() {
 
     simxSynchronousTrigger(clientID);
@@ -144,7 +143,7 @@ void EPuckVREPDriver::getVisionSensor(Robot& robot) {
 	cv::imshow("Camera", robot.vision_sensors);
 	cv::waitKey(1);
     
-	cv::imwrite(log().folder_ + "/image/" +  std::string( 4 - std::to_string(ajouter).length(), '0').append( std::to_string(ajouter)) + ".png", robot.vision_sensors);
+	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(ajouter).length(), '0').append( std::to_string(ajouter)) + ".png", robot.vision_sensors);
 
 	++ajouter;
 }
@@ -157,10 +156,10 @@ EPuckVREPDriver::~EPuckVREPDriver() {
 
 void EPuckVREPDriver::PrintSensors() {
     dataToRobot();
-
-    std::cout << "ePuck location : " << robot().current_pose.x << ", " << robot().current_pose.y << ", " << robot().current_pose.th << "\n"
-              << "Position : Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
-              << "Speed    : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
+    std::cout << "Iteration N°"<<ajouter << "\n"
+              << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
+              << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
+              << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
 
 
     if(detectionStateIR[0]!=0) {
