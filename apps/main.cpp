@@ -21,10 +21,10 @@ int main(int argc, char** argv) {
         driver = std::make_unique<EPuckVREPDriver>(robot);
     }
 
-    std::cout << "Target Velocity : \n "
-              << "Left Speed : ";
+    std::cout << "Target Velocity : \n"
+              << "Left Speed  [rad/s]: ";
     std::cin >> robot.wheels_command.left_velocity;
-    std::cout << "Right Speed : ";
+    std::cout << "Right Speed [rad/s]: ";
     std::cin >> robot.wheels_command.right_velocity;
     std::cout << std::endl;
 
