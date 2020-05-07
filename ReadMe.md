@@ -17,6 +17,7 @@ $ ~/CoppeliaSim_Edu_V4_0_0_Ubuntu18_04/coppeliaSim.sh
 $ sudo apt install libopencv-dev
 ```
 
+* Le logiciel CMake
 ```sh
 $ sudo apt install cmake
 ```
