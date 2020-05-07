@@ -6,7 +6,6 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc.hpp>
 
 #include <iostream>
@@ -138,8 +137,8 @@ void EPuckVREPDriver::send() {
 void EPuckVREPDriver::getVisionSensor(Robot& robot) {
 	cv::Mat img(res[0], res[1], CV_8UC3, (unsigned char*) simImage);
 	cv::flip(img, robot.vision_sensors, 0);
-    cv::cvtColor(robot.vision_sensors, robot.vision_sensors, CV_BGR2RGB);
-	cv::namedWindow("Camera", CV_WINDOW_AUTOSIZE);
+    cv::cvtColor(robot.vision_sensors, robot.vision_sensors, cv::COLOR_BGR2RGB);
+	cv::namedWindow("Camera", cv::WINDOW_AUTOSIZE);
 	cv::imshow("Camera", robot.vision_sensors);
 	cv::waitKey(1);
     
@@ -156,7 +155,7 @@ EPuckVREPDriver::~EPuckVREPDriver() {
 
 void EPuckVREPDriver::PrintSensors() {
     dataToRobot();
-    std::cout << "Iteration N�"<<ajouter << "\n"
+    std::cout << "Iteration N"<<ajouter << "\n"
               << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
               << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
