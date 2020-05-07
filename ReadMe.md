@@ -12,24 +12,13 @@ $ # lancement de l'application
 $ ~/CoppeliaSim_Edu_V4_0_0_Ubuntu18_04/coppeliaSim.sh
 ```
 
-* La librairie [Open CV](https://docs.opencv.org/2.4/doc/tutorials/introduction/linux_install/linux_install.html)
+* La librairie Open CV
 ```sh
-$ sudo apt-get install build-essential
-$ sudo apt-get install cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
-$ # En option pour avoir opencv pour python 2
-$ sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev
+$ sudo apt install libopencv-dev
 ```
 
 ```sh
-$ cd ~/opencv
-$ mkdir release
-$ cd release
-$ cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local ..
-```
-L'étape suivante est celle qui prend le plus de temps:
-```sh
-$ make
-$ sudo make install
+$ sudo apt install cmake
 ```
 
 ### Installation

@@ -156,7 +156,7 @@ EPuckVREPDriver::~EPuckVREPDriver() {
 
 void EPuckVREPDriver::PrintSensors() {
     dataToRobot();
-    std::cout << "Iteration N°"<<ajouter << "\n"
+    std::cout << "Iteration Nï¿½"<<ajouter << "\n"
               << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
               << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
