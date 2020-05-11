@@ -12,7 +12,7 @@ void exitLoop(int sig) {
 
 int main(int argc, char** argv) {
 
-    bool real_robot = false;
+    bool real_robot = true;
     Robot robot;
     std::unique_ptr<RobotDriver> driver;
     if (real_robot) {

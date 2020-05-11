@@ -40,7 +40,7 @@ private:
 class EPuckV2Driver : public RobotDriver {
 public:
     EPuckV2Driver(Robot& robot);
-    virtual ~EPuckV2Driver() = default;
+    virtual ~EPuckV2Driver();
 
     void init() override;
     void read() override;
