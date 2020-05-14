@@ -62,7 +62,7 @@ int bytes_sent = 0, bytes_recv = 0;
 bool camera_enabled, ground_sensors_enabled;
 uint8_t expected_recv_packets = 0;
 bool newImageReceived = false;
-std::string epuckAddress("127.0.0.1");
+std::string epuckAddress("192.168.1.101");
 
 // Sensors data variables
 unsigned char image[160*120*2];
@@ -96,4 +96,6 @@ int speedLeft = 0, speedRight = 0;
 
 // General variables
 std::string epuckname;
+
+
 

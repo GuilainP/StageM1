@@ -14,8 +14,18 @@ EPuckV2Driver::~EPuckV2Driver() {
         if(DEBUG_CONNECTION_INIT)perror(ss.str().c_str());
     }
 }
+
+void closeConnection(){
+	std::stringstream ss;
+    if(close(fd) < 0) {
+        ss.str("");
+        ss << "[" << epuckname << "] " << "Can't close tcp socket";
+        if(DEBUG_CONNECTION_INIT)perror(ss.str().c_str());
+    }
+}
+
 // TODO
-void EPuckV2Driver::init() {
+bool EPuckV2Driver::Init() {
     std::cout << "init V1\n";
     int ret_value;
 	std::stringstream ss;
@@ -25,26 +35,26 @@ void EPuckV2Driver::init() {
 	
    	robot_addr.sin_family = AF_INET;
    	robot_addr.sin_addr.s_addr = inet_addr(epuckAddress.c_str());
-   	robot_addr.sin_port = htons(LOCALHOST_PORT);
+   	robot_addr.sin_port = htons(EPUCK_PORT);
 
 	if(DEBUG_CONNECTION_INIT)fprintf(stderr, "Try to connect to %s:%d (TCP)\n", inet_ntoa(robot_addr.sin_addr), htons(robot_addr.sin_port));
 	
    	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(fd < 0) {
 		perror("TCP cannot create socket: ");
-		//return -1;
+		return false;
 	}
 	
 	// Set to non-blocking mode during connection otherwise it will block for too much time if the robot isn't ready to accept connections
     if( (ret_value = fcntl(fd, F_GETFL, 0)) < 0) {
 		perror("Cannot get flag status: ");
-		//return -1;
+		return false;
     }
 
 	ret_value |= O_NONBLOCK;
 	if(fcntl(fd, F_SETFL, ret_value) < 0) {
 		perror("Cannot set non-blocking mode: ");
-		//return -1;
+		return false;
 	}
 	
 	while(trials < MAX_CONNECTION_TRIALS) {
@@ -62,20 +72,20 @@ void EPuckV2Driver::init() {
 	if(trials == MAX_CONNECTION_TRIALS) {
 		ss.str("");
 		ss << "[" << epuckname << "] " << "Error, can't connect to tcp socket";
-		//if(DEBUG_CONNECTION_INIT)perror(ss.str().c_str());
-		//return -1;
+		if(DEBUG_CONNECTION_INIT)perror(ss.str().c_str());
+		return false;
 	}
 	
 	// Set to blocking mode.
     if( (ret_value = fcntl(fd, F_GETFL, 0)) < 0) {
 		perror("Cannot get flag status: ");
-		//return -1;
+		return false;
     }
 
 	ret_value &= (~O_NONBLOCK);
 	if(fcntl(fd, F_SETFL, ret_value) < 0) {
 		perror("Cannot set blocking mode: ");
-		//return -1;
+		return false;
 	}
 
 	// Set the reception timeout. This is used when blocking mode is activated after connection.
@@ -84,46 +94,67 @@ void EPuckV2Driver::init() {
 	ret_value = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 	if(ret_value < 0) {
 		perror("Cannot set rx timeout: ");
-		//return -1;
+		return false;
 	}	
 	
-	//return 0;
+	std::cout << "Cmd initialization" << std::endl; 
+	
+	command[0] = 0x80;
+	command[1] = 2;		// Sensors enabled.
+	command[2] = 1;		// Calibrate proximity sensors.
+	command[3] = 0;		// left motor LSB
+	command[4] = 0;		// left motor MSB
+	command[5] = 0;		// right motor LSB
+	command[6] = 0;		// right motor MSB
+	command[7] = 0;		// lEDs
+	command[8] = 0;		// LED2 red
+	command[9] = 0;		// LED2 green
+	command[10] = 0;	// LED2 blue
+	command[11] = 0;	// LED4 red
+	command[12] = 0;	// LED4 green
+	command[13] = 0;	// LED4 blue
+	command[14] = 0;	// LED6 red
+	command[15] = 0;	// LED6 green
+	command[16] = 0;	// LED6 blue
+	command[17] = 0;	// LED8 red
+	command[18] = 0;	// LED8 green
+	command[19] = 0;	// LED8 blue
+	command[20] = 0;	// speaker   
+	expected_recv_packets = 1;
+
+	return true;
 };
 
 // TODO
-void EPuckV2Driver::read() {
-    //std::cout << "read V1\n";
-	int bytes_sent = 0, bytes_recv = 0, ret_value;
+void EPuckV2Driver::Read() {
+ 
+	int bytes_recv = 0, ret_value;
 	long mantis = 0;
 	short exp = 0;
 	float flt = 0.0;
 				
-	bytes_sent = 0;
-	while(bytes_sent < sizeof(command)) {
-		//bytes_sent += send(fd, (char *)&command[bytes_sent], sizeof(command)-bytes_sent, 0);
-	}
-	command[2] = 0; // Stop proximity calibration.
+
 			
 	while(expected_recv_packets > 0) {
 		bytes_recv = recv(fd, (char *)&header, 1, 0);
-		/*if (bytes_recv <= 0) {
+		if (bytes_recv <= 0) {
 			closeConnection();
-			if(initConnectionWithRobot() < 0) {
+			if(Init() == false ) {
 				std::cerr << "Lost connection with the robot" << std::endl;
 				exit(1);
 			} else {
 				return; // Wait for the next sensor request
 			}
-		}*/
+		}
 		
 		switch(header) {
 			case 0x01:	// Camera.				
 				bytes_recv = 0;
 				while(bytes_recv < sizeof(image)) {
 					ret_value = recv(fd, (char *)&image[bytes_recv], sizeof(image)-bytes_recv, 0);
-					/*if(ret_value <= 0) {
+					if(ret_value <= 0) {
 						closeConnection();
-						if(initConnectionWithRobot() < 0) {
+						if(Init() == false) {
 							std::cerr << "Lost connection with the robot" << std::endl;
 							exit(1);
 						} else {
@@ -131,8 +162,8 @@ void EPuckV2Driver::read() {
 						}
 					} else {
 						bytes_recv += ret_value;
-						//std::cout << "image read = " << bytes_recv << std::endl;
-					}*/
+						std::cout << "image read = " << bytes_recv << std::endl;
+					}
 				}
 				
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << epuckname << "] " << "camera read correctly" << std::endl;
@@ -149,9 +180,9 @@ void EPuckV2Driver::read() {
 				bytes_recv = 0;
 				while(bytes_recv < sizeof(sensor)) {
 					ret_value = recv(fd, (char *)&sensor[bytes_recv], sizeof(sensor)-bytes_recv, 0);
-					/*if(ret_value <= 0) {
+					if(ret_value <= 0) {
 						closeConnection();
-						if( < 0) {
+						if(Init() == false ) {
 							std::cerr << "Lost connection with the robot" << std::endl;
 							exit(1);
 						} else {
@@ -159,8 +190,8 @@ void EPuckV2Driver::read() {
 						}
 					} else {
 						bytes_recv += ret_value;
-						//std::cout << "sensors read = " << bytes_recv << std::endl;
-					}*/
+						std::cout << "sensors read = " << bytes_recv << std::endl;
+					}
 				}
 
                 accData[0] = sensor[0] + sensor[1]*256;
@@ -345,10 +376,61 @@ void EPuckV2Driver::read() {
 	}
 };
 
+void ToggleLed(uchar*);
 // TODO
-void EPuckV2Driver::send() {
+void EPuckV2Driver::Send() {
     //std::cout << "send V1\n";
+	command[0] = 0x80;
+	command[1] = 2;		// Sensors enabled.
+	command[2] = 1;		// Calibrate proximity sensors.
+	command[3] = 0;		// left motor LSB
+	command[4] = 0;		// left motor MSB
+	command[5] = 0;		// right motor LSB
+	command[6] = 0;		// right motor MSB
+	command[7] = 0;		// lEDs
+	command[8] = 0;		// LED2 red
+	command[9] = 0;		// LED2 green
+	command[10] = 0;	// LED2 blue
+	command[11] = 0;	// LED4 red
+	command[12] = 0;	// LED4 green
+	command[13] = 0;	// LED4 blue
+	command[14] = 0;	// LED6 red
+	command[15] = 0;	// LED6 green
+	command[16] = 0;	// LED6 blue
+	//ToggleLed(command);
+	command[17] = 0;	// LED8 red
+	command[18] = 0;	// LED8 green
+	command[19] = 0;	// LED8 blue
+	command[20] = 0;	// speaker
+
+   	int bytes_sent = 0;
+	bytes_sent = 0;
+	while(bytes_sent < sizeof(command)) {
+		bytes_sent += send(fd, (char *)&command[bytes_sent], sizeof(command)-bytes_sent, 0);
+	}
+	command[2] = 0; // Stop proximity calibration.
+
 };
+
+void ToggleLed(uchar* led) {
+	if(led[14] == 0 && led[15] == 0 && led[16] == 0){
+		led[14] = 1;
+		led[15] = 0;
+		led[16] = 0;
+	}else if (led[14] == 1 && led[15] == 0 && led[16] == 0){
+		led[14] = 0;
+		led[15] = 1;
+		led[16] = 0;
+	}else if (led[15] == 1 && led[14] == 0 && led[16] == 0){
+		led[14] = 0;
+		led[15] = 0;
+		led[16] = 1;
+	}else if (led[16] == 1 && led[15] == 0 && led[14] == 0){
+		led[14] = 0;
+		led[15] = 0;
+		led[16] = 0;
+	}
+}
 
 // TODO
 void EPuckV2Driver::getVisionSensor(Robot& robot) {

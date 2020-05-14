@@ -35,13 +35,14 @@
 EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter(1) {
 }
  
-void EPuckVREPDriver::init() {
+bool EPuckVREPDriver::Init() {
     clientID = simxStart((simxChar*)"127.0.0.1", 19997, true, true, 2000, 5);
     std::cout << "clientID = " << clientID << std::endl;
 
     if (clientID == -1) {
         std::cout << ("Could not connect to V-REP remote API server") << std::endl;
         simxFinish(clientID);
+        return false;
     } else {
         minr = 0; minl =0;
         maxr = 0; maxl = 0;
@@ -90,11 +91,13 @@ void EPuckVREPDriver::init() {
        
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        
+        return true;
     }
 }
 
 
-void EPuckVREPDriver::read() {
+void EPuckVREPDriver::Read() {
 
     simxSynchronousTrigger(clientID);
 
@@ -127,7 +130,7 @@ void EPuckVREPDriver::read() {
     PrintSensors();
 }
 
-void EPuckVREPDriver::send() {
+void EPuckVREPDriver::Send() {
     simxPauseCommunication(clientID, 1);
     simxSetJointTargetVelocity(clientID, leftJointHandle, robot().wheels_command.left_velocity, simx_opmode_oneshot);
     simxSetJointTargetVelocity(clientID, rightJointHandle, robot().wheels_command.right_velocity, simx_opmode_oneshot);

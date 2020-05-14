@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     std::cin >> robot.wheels_command.right_velocity;
     std::cout << std::endl;
 
-    driver->init();
+    driver->Init();
     
     std::signal(SIGINT, exitLoop);
     while (true) {
@@ -36,13 +36,11 @@ int main(int argc, char** argv) {
             break;
         }
 
-        driver->read();
+        driver->Read();
 
         driver->getVisionSensor(robot);
 
-        driver->send();
-
+        driver->Send();
         
-
     }
 }

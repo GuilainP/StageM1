@@ -9,9 +9,9 @@ public:
     }
     virtual ~RobotDriver() = default;
 
-    virtual void init() = 0;
-    virtual void read() = 0;
-    virtual void send() = 0;
+    virtual bool Init() = 0;
+    virtual void Read() = 0;
+    virtual void Send() = 0;
     virtual void getVisionSensor(Robot& robot) = 0;
 
     Robot& robot();
@@ -27,14 +27,14 @@ public:
     EPuckV1Driver(Robot& robot);
     virtual ~EPuckV1Driver() = default;
 
-    void init() override;
-    void read() override;
-    void send() override;
+    bool Init() override;
+    void Read() override;
+    void Send() override;
     void getVisionSensor(Robot& robot) override ;
 
 private:
-    std::string IP;
-    std::string port;
+    std::string robotIP;
+    std::string robotID;
 };
 
 class EPuckV2Driver : public RobotDriver {
@@ -42,14 +42,14 @@ public:
     EPuckV2Driver(Robot& robot);
     virtual ~EPuckV2Driver();
 
-    void init() override;
-    void read() override;
-    void send() override;
+    bool Init() override;
+    void Read() override;
+    void Send() override;
     void getVisionSensor(Robot& robot) override ;
 
 private:
-    std::string IP;
-    std::string port;
+    std::string robotIP;
+    std::string robotID;
 };
 
 class EPuckVREPDriver : public RobotDriver {
@@ -57,9 +57,9 @@ public:
     EPuckVREPDriver(Robot& robot);
     virtual ~EPuckVREPDriver();
 
-    void init() override;
-    void read() override;
-    void send() override;
+    bool Init() override;
+    void Read() override;
+    void Send() override;
     void getVisionSensor(Robot& robot) override ;
 
     void setVelocity(double, double);
