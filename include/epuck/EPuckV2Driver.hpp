@@ -1,22 +1,8 @@
-#include "RobotDriver.hpp"
+#pragma once
 
-#include <sstream>
-#include <math.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <opencv2/opencv.hpp>
-
-#define LOCALHOST_PORT  54000
 #define EPUCK_PORT 1000
 
-#define DEBUG_CONNECTION_INIT 1
+#define DEBUG_CONNECTION_INIT 0
 #define DEBUG_UPDATE_SENSORS_DATA 0
 #define DEBUG_ODOMETRY 0
 #define DEBUG_IMU 0
@@ -53,49 +39,7 @@
 #define MAX_VOLTAGE				4.2f	//volt
 #define MIN_VOLTAGE				3.4f	//volt
 
-// Communication variables
-struct sockaddr_in robot_addr;
-int fd;
-unsigned char command[21];
-unsigned char header, sensor[104];
-int bytes_sent = 0, bytes_recv = 0;
-bool camera_enabled, ground_sensors_enabled;
-uint8_t expected_recv_packets = 0;
-bool newImageReceived = false;
-std::string epuckAddress("192.168.1.101");
 
-// Sensors data variables
-unsigned char image[160*120*2];
-float acceleration, orientation, inclination;		/**< acceleration data*/
-int16_t accData[3];
-int16_t gyroRaw[3];
-float magneticField[3];
-uint8_t temperature;
-int proxData[8]; /**< proximity sensors data*/
-int lightAvg;										/**< light sensor data*/
-uint16_t distanceCm;
-uint16_t micVolume[4];								/**< microphone data*/
-int16_t motorSteps[2];
-uint16_t batteryRaw;
-uint8_t microSdState;
-uint8_t irCheck, irAddress, irData;
-uint8_t selector;
-int16_t groundProx[3], groundAmbient[3];
-uint8_t buttonState;
-
-double leftStepsDiff = 0, rightStepsDiff = 0;
-double leftStepsPrev = 0, rightStepsPrev = 0;
-signed long int leftStepsRawPrev = 0, rightStepsRawPrev = 0;
-signed long int motorPositionDataCorrect[2];
-double xPos, yPos, theta;
-double deltaSteps, deltaTheta;
-
-int overflowCountLeft = 0, overflowCountRight = 0;
-int16_t gyroOffset[3] = {0, 0, 0}; // Used if making an initial calibration of the gyro.
-int speedLeft = 0, speedRight = 0;
-
-// General variables
-std::string epuckname;
 
 
 

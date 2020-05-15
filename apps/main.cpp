@@ -10,6 +10,10 @@ void exitLoop(int sig) {
     signaled = 1;
 }
 
+void deleteDriver(RobotDriver& driver){
+    driver.~RobotDriver();
+}
+
 int main(int argc, char** argv) {
 
     bool real_robot = true;
@@ -35,12 +39,13 @@ int main(int argc, char** argv) {
         if (signaled == 1) {
             break;
         }
-
-        driver->Read();
-
-        driver->getVisionSensor(robot);
-
+        
         driver->Send();
+        driver->Read();
+        driver->getVisionSensor(robot);
         
     }
+
+    deleteDriver(*driver);
 }
+

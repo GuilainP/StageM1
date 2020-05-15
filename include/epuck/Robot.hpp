@@ -33,11 +33,6 @@ public:
     Proximity_sensors proximity_sensors;
     Pose desired_pose, current_pose;
     cv::Mat vision_sensors;
-
-    uchar led2[3];
-    uchar led4[3];
-    uchar led6[3];
-    uchar led8[3];
 };
 // current_pose.th [-pi/2;pi/2]
 // wheels_state.*_position [-pi, pi]
