@@ -12,26 +12,6 @@
 #include <thread>
 #include <chrono>
 
-#define COLOR_COUT_RESET "\033[0m"
-
-#define COLOR_COUT_BLACK "\033[0;30m"
-#define COLOR_COUT_RED "\033[0;31m"
-#define COLOR_COUT_GREEN "\033[0;32m"
-#define COLOR_COUT_YELLOW "\033[0;33m"
-#define COLOR_COUT_BLUE "\033[0;34m"
-#define COLOR_COUT_MAGENTA "\033[0;35m"
-#define COLOR_COUT_CYAN "\033[0;36m"
-#define COLOR_COUT_WHITE "\033[0;37m"
-
-#define COLOR_COUT_BLACK_BRIGHT "\033[1;30m"
-#define COLOR_COUT_RED_BRIGHT "\033[1;31m"
-#define COLOR_COUT_GREEN_BRIGHT "\033[1;32m"
-#define COLOR_COUT_YELLOW_BRIGHT "\033[1;33m"
-#define COLOR_COUT_BLUE_BRIGHT "\033[1;34m"
-#define COLOR_COUT_MAGENTA_BRIGHT "\033[1;35m"
-#define COLOR_COUT_CYAN_BRIGHT "\033[1;36m"
-#define COLOR_COUT_WHITE_BRIGHT "\033[1;37m"
-
 EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter(1) {
 }
  
