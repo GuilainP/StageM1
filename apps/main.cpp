@@ -10,13 +10,11 @@ void exitLoop(int sig) {
     signaled = 1;
 }
 
-void deleteDriver(RobotDriver& driver){
-    driver.~RobotDriver();
-}
+
 
 int main(int argc, char** argv) {
 
-    bool real_robot = true;
+    bool real_robot = false;
     Robot robot;
     std::unique_ptr<RobotDriver> driver;
     if (real_robot) {
@@ -39,13 +37,14 @@ int main(int argc, char** argv) {
         if (signaled == 1) {
             break;
         }
-        
-        driver->Send();
+
         driver->Read();
+
         driver->getVisionSensor(robot);
-        
+
+        driver->Send();
     }
 
-    deleteDriver(*driver);
+
 }
 

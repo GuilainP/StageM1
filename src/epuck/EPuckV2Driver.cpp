@@ -1,6 +1,9 @@
 #include "RobotDriver.hpp"
 #include "EPuckV2Driver.hpp"
 
+#include <chrono>
+#include <thread>
+
 EPuckV2Driver::EPuckV2Driver(Robot& robot) : RobotDriver(robot) {
 	robot.vision_sensors = cv::Mat(120, 160, CV_8UC3);
 	robotIP = "192.168.1.101";
@@ -16,16 +19,13 @@ EPuckV2Driver::EPuckV2Driver(Robot& robot) : RobotDriver(robot) {
 
     overflowCountLeft = 0, overflowCountRight = 0;
     gyroOffset[0]=0, gyroOffset[1]=0, gyroOffset[2]=0; // Used if making an initial calibration of the gyro.
-    speedLeft = 0, speedRight = 0;
-
 
 }
 
 EPuckV2Driver::~EPuckV2Driver() {
-    std::stringstream ss;
 
 	command[0] = 0x80;
-	command[1] = 0;		// 0b10 Sensors enabled , 0b01 Image enabled
+	command[1] = 0b11;		// 0b10 Sensors enabled , 0b01 Image enabled
 	command[2] = 0;		// Calibrate proximity sensors.
 	command[3] = 0;		// left motor LSB
 	command[4] = 0;		// left motor MSB
@@ -46,18 +46,14 @@ EPuckV2Driver::~EPuckV2Driver() {
 	command[19] = 0;	// LED8 blue
 	command[20] = 0;	// speaker
 
-	int bytes_sent = 0;
+	bytes_sent = 0;
 	while(bytes_sent < sizeof(command)) {
 		bytes_sent += send(fd, (char *)&command[bytes_sent], sizeof(command)-bytes_sent, 0);
 	}
 
-    if(close(fd) < 0) {
-        ss.str("");
-        ss << "[" << robotIP << "] " << "Can't close tcp socket";
-        if(DEBUG_CONNECTION_INIT)perror(ss.str().c_str());
-    }
+	closeConnection();
 
-	log().~Logger();
+	std::cout << "DRIVER V2 DESTRUCTED\n";
 }
 
 void EPuckV2Driver::closeConnection(){
@@ -69,8 +65,8 @@ void EPuckV2Driver::closeConnection(){
     }
 }
 
-// TODO
 bool EPuckV2Driver::Init() {
+
     std::cout << "init V1\n";
     int ret_value;
 	std::stringstream ss;
@@ -110,7 +106,7 @@ bool EPuckV2Driver::Init() {
 		} else {
 			trials++;
 			if(DEBUG_CONNECTION_INIT)fprintf(stderr, "Connection trial %d\n", trials);
-			sleep(3);			
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));			
 		}
 	}
 	
@@ -145,7 +141,7 @@ bool EPuckV2Driver::Init() {
 	std::cout << "Cmd initialization" << std::endl; 
 	
 	command[0] = 0x80;
-	command[1] = 0b11;		// 0b10 Sensors enabled , 0b01 Image enabled
+	command[1] = 0b11;	// 0b10 Sensors enabled , 0b01 Image enabled
 	command[2] = 1;		// Calibrate proximity sensors.
 	command[3] = 0;		// left motor LSB
 	command[4] = 0;		// left motor MSB
@@ -167,13 +163,20 @@ bool EPuckV2Driver::Init() {
 	command[20] = 0;	// speaker   
 	expected_recv_packets = 1;
 
+	bytes_sent = 0;
+	while(bytes_sent < sizeof(command)) {
+		bytes_sent += send(fd, (char *)&command[bytes_sent], sizeof(command)-bytes_sent, 0);
+	}
+	command[2] = 0; // Stop proximity calibration.
+
 	return true;
 };
 
 // TODO
 void EPuckV2Driver::Read() {
  
-	int bytes_recv = 0, ret_value;
+	bytes_recv = 0;
+	int ret_value;
 	long mantis = 0;
 	short exp = 0;
 	float flt = 0.0;
@@ -235,7 +238,7 @@ void EPuckV2Driver::Read() {
 						}
 					} else {
 						bytes_recv += ret_value;
-						std::cout << "sensors read = " << bytes_recv << std::endl;
+						//std::cout << "sensors read = " << bytes_recv << std::endl;
 					}
 				}
 
@@ -243,7 +246,7 @@ void EPuckV2Driver::Read() {
                 accData[1] = sensor[2] + sensor[3]*256;
                 accData[2] = sensor[4] + sensor[5]*256;			
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "acc: " << accData[0] << "," << accData[1] << "," << accData[2] << std::endl;
-				
+				/*
 				// Compute acceleration
 				mantis = (sensor[6] & 0xff) + ((sensor[7] & 0xffl) << 8) + (((sensor[8] &0x7fl) | 0x80) << 16);
 				exp = (sensor[9] & 0x7f) * 2 + ((sensor[8] & 0x80) ? 1 : 0);
@@ -265,7 +268,7 @@ void EPuckV2Driver::Read() {
 					orientation=0.0;
 				if (orientation > 360.0 )
 					orientation=360.0;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "orientation: " << orientation << std::endl;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "orientation: " << orientation << std::endl;*/
 /*
 				// Compute inclination.
 				mantis = (sensor[14] & 0xff) + ((sensor[15] & 0xffl) << 8) + (((sensor[16] &0x7fl) | 0x80) << 16);
@@ -425,15 +428,17 @@ void EPuckV2Driver::Read() {
 void ToggleLed(uchar*);
 // TODO
 void EPuckV2Driver::Send() {
+
     //std::cout << "send V1\n";
 	command[0] = 0x80;
 	command[1] = 0b11;	// 0b10 Sensors enabled , 0b01 Image enabled
-	command[2] = 1;		// Calibrate proximity sensors.
+	command[2] = 0;		// Calibrate proximity sensors.
 	command[3] = 0;		// left motor LSB
 	command[4] = robot().wheels_command.left_velocity;		// left motor MSB
 	command[5] = 0;		// right motor LSB
 	command[6] = robot().wheels_command.right_velocity;		// right motor MSB
-	command[7] = 0b0;	// lEDs
+	//(ajouter%100)>50 ? command[7] = 0b111111 : command[7] = 0b0;
+	command[7] = 0b111111;	// lEDs
 	command[8] = 0;		// LED2 red
 	command[9] = 0;		// LED2 green
 	command[10] = 0;	// LED2 blue
@@ -448,12 +453,11 @@ void EPuckV2Driver::Send() {
 	command[19] = 0;	// LED8 blue
 	command[20] = 0;	// speaker
 
-   	int bytes_sent = 0;
+   	bytes_sent = 0;
 	bytes_sent = 0;
 	while(bytes_sent < sizeof(command)) {
 		bytes_sent += send(fd, (char *)&command[bytes_sent], sizeof(command)-bytes_sent, 0);
 	}
-	command[2] = 0; // Stop proximity calibration.
 
 };
 
@@ -472,27 +476,24 @@ void RGB565toRGB888(int width, int height, unsigned char *src, unsigned char *ds
 }
 
 void EPuckV2Driver::getVisionSensor(Robot& robot) {
-	if(command[1]%2 == 1){
-		RGB565toRGB888(160, 120, &image[0], robot.vision_sensors.data);  
-		cv::namedWindow("Camera", cv::WINDOW_NORMAL);
-		cv::resizeWindow("Camera", 160*2, 120*2);
-		cv::imshow("Camera", robot.vision_sensors);
-		cv::waitKey(1);
-		
-		cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(ajouter).length(), '0').append( std::to_string(ajouter)) + ".png", robot.vision_sensors);
+	RGB565toRGB888(160, 120, &image[0], robot.vision_sensors.data);
+	cv::namedWindow("Camera", cv::WINDOW_NORMAL);
+	cv::resizeWindow("Camera", 160*2, 120*2);
+	cv::imshow("Camera", robot.vision_sensors);
+	cv::waitKey(1);
+	
+	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(ajouter).length(), '0').append( std::to_string(ajouter)) + ".png", robot.vision_sensors);
 
-		++ajouter;
-	}
-
+	++ajouter;
 }
 
 void EPuckV2Driver::PrintSensors() {
-    std::cout << "Iteration N"<<ajouter << "\n"
+    std::cout << "Iteration N "<<ajouter << "\n"
               //<< "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n";
               //<< "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
 
-
+	
     std::cout << "IR0 : " << robot().proximity_sensors.IR[0] << "\n";
     std::cout << "IR0 : " << robot().proximity_sensors.IR[1] << "\n";
     std::cout << "IR2 : " << robot().proximity_sensors.IR[2] << "\n";

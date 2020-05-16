@@ -109,7 +109,7 @@ private:
 
     int overflowCountLeft, overflowCountRight ;
     int16_t gyroOffset[3] ; // Used if making an initial calibration of the gyro.
-    int speedLeft, speedRight;
+
 
 };
 
