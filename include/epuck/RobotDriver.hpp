@@ -80,9 +80,11 @@ public:
     bool Init() override;
     void Read() override;
     void Send() override;
+    
     void getVisionSensor(Robot& robot) override ;
     void PrintSensors();
     void closeConnection();
+    void proxDataRawValuesToMeters();
 
 private:
     std::string robotIP;

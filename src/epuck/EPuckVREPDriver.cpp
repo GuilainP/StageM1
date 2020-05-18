@@ -148,11 +148,11 @@ void EPuckVREPDriver::PrintSensors() {
         std::cout << "IR0 : " << robot().proximity_sensors.IR[0] << "\n";
     }     
     else{
-         std::cout << COLOR_COUT_BLACK << "IR0 : NONE" << COLOR_COUT_RESET << "\n";
+        std::cout << COLOR_COUT_BLACK << "IR0 : NONE" << COLOR_COUT_RESET << "\n";
     }
     
     if(detectionStateIR[1]!=0) {
-        std::cout << "IR0 : " << robot().proximity_sensors.IR[1] << "\n";
+        std::cout << "IR1 : " << robot().proximity_sensors.IR[1] << "\n";
     }
     else{ 
         std::cout << COLOR_COUT_BLACK << "IR1 : NONE" << COLOR_COUT_RESET << "\n";

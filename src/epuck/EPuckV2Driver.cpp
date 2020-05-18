@@ -6,7 +6,7 @@
 
 EPuckV2Driver::EPuckV2Driver(Robot& robot) : RobotDriver(robot) {
 	robot.vision_sensors = cv::Mat(120, 160, CV_8UC3);
-	robotIP = "192.168.1.101";
+	robotIP = "192.168.1.100";
 	robotID = "4550";
 	bytes_sent = 0;
 	bytes_recv = 0;
@@ -246,7 +246,7 @@ void EPuckV2Driver::Read() {
                 accData[1] = sensor[2] + sensor[3]*256;
                 accData[2] = sensor[4] + sensor[5]*256;			
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "acc: " << accData[0] << "," << accData[1] << "," << accData[2] << std::endl;
-				/*
+
 				// Compute acceleration
 				mantis = (sensor[6] & 0xff) + ((sensor[7] & 0xffl) << 8) + (((sensor[8] &0x7fl) | 0x80) << 16);
 				exp = (sensor[9] & 0x7f) * 2 + ((sensor[8] & 0x80) ? 1 : 0);
@@ -268,8 +268,8 @@ void EPuckV2Driver::Read() {
 					orientation=0.0;
 				if (orientation > 360.0 )
 					orientation=360.0;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "orientation: " << orientation << std::endl;*/
-/*
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "orientation: " << orientation << std::endl;
+
 				// Compute inclination.
 				mantis = (sensor[14] & 0xff) + ((sensor[15] & 0xffl) << 8) + (((sensor[16] &0x7fl) | 0x80) << 16);
 				exp = (sensor[17] & 0x7f) * 2 + ((sensor[16] & 0x80) ? 1 : 0);
@@ -298,7 +298,7 @@ void EPuckV2Driver::Read() {
 				// Temperature.
 				temperature = sensor[36];
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "temperature: " << (int)temperature << std::endl;
-*/
+
 				// Proximity sensors data.
 				robot().proximity_sensors.IR[0] = sensor[37]+sensor[38]*256;
 				robot().proximity_sensors.IR[1] = sensor[39]+sensor[40]*256;
@@ -308,32 +308,9 @@ void EPuckV2Driver::Read() {
 				robot().proximity_sensors.IR[5] = sensor[47]+sensor[48]*256;
 				robot().proximity_sensors.IR[6] = sensor[49]+sensor[50]*256;
 				robot().proximity_sensors.IR[7] = sensor[51]+sensor[52]*256;
-				if(robot().proximity_sensors.IR[0]<0) {
-					robot().proximity_sensors.IR[0]=0;
-				}
-				if(robot().proximity_sensors.IR[1]<0) {
-					robot().proximity_sensors.IR[1]=0;
-				}
-				if(robot().proximity_sensors.IR[2]<0) {
-					robot().proximity_sensors.IR[2]=0;
-				}
-				if(robot().proximity_sensors.IR[3]<0) {
-					robot().proximity_sensors.IR[3]=0;
-				}
-				if(robot().proximity_sensors.IR[4]<0) {
-					robot().proximity_sensors.IR[4]=0;
-				}
-				if(robot().proximity_sensors.IR[5]<0) {
-					robot().proximity_sensors.IR[5]=0;
-				}
-				if(robot().proximity_sensors.IR[6]<0) {
-					robot().proximity_sensors.IR[6]=0;
-				}
-				if(robot().proximity_sensors.IR[7]<0) {
-					robot().proximity_sensors.IR[7]=0;
-				}
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "prox: " << robot().proximity_sensors.IR[0] << "," << robot().proximity_sensors.IR[1] << "," << robot().proximity_sensors.IR[2] << "," << robot().proximity_sensors.IR[3] << "," << robot().proximity_sensors.IR[4] << "," << robot().proximity_sensors.IR[5] << "," << robot().proximity_sensors.IR[6] << "," << robot().proximity_sensors.IR[7] << std::endl;				
-/*
+
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "prox: " << robot().proximity_sensors.IR[0] << "," << robot().proximity_sensors.IR[1] << "," << robot().proximity_sensors.IR[2] << "," << robot().proximity_sensors.IR[3] << "," << robot().proximity_sensors.IR[4] << "," << robot().proximity_sensors.IR[5] << "," << robot().proximity_sensors.IR[6] << "," << robot().proximity_sensors.IR[7] << std::endl;							
+
 				// Compute abmient light.
 				lightAvg += (sensor[53]+sensor[54]*256);
 				lightAvg += (sensor[55]+sensor[56]*256);
@@ -363,13 +340,13 @@ void EPuckV2Driver::Read() {
 				micVolume[2] = ((uint8_t)sensor[75]+(uint8_t)sensor[76]*256);
 				micVolume[3] = ((uint8_t)sensor[77]+(uint8_t)sensor[78]*256);
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "mic: " << micVolume[0] << "," << micVolume[1] << "," << micVolume[2] << "," << micVolume[3] << std::endl;
-*/
+
 				// Left steps
 				robot().wheels_state.left_position = (double)(sensor[79]+sensor[80]*256);
 				// Right steps
 				robot().wheels_state.right_position = (double)(sensor[81]+sensor[82]*256);
 				//if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "steps: " << motorSteps[0] << "," << motorSteps[1] << std::endl;
-/*
+
 				// Battery
 				batteryRaw = (uint8_t)sensor[83]+(uint8_t)sensor[84]*256;
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "batteryRaw: " << batteryRaw << std::endl;
@@ -403,7 +380,7 @@ void EPuckV2Driver::Read() {
 				// Button state.
 				buttonState = sensor[102];			
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robotIP << "] " << "buttonState: " << (int)buttonState << std::endl;
-*/
+
 				break;
 			
 			case 0x03:
@@ -438,7 +415,7 @@ void EPuckV2Driver::Send() {
 	command[5] = 0;		// right motor LSB
 	command[6] = robot().wheels_command.right_velocity;		// right motor MSB
 	//(ajouter%100)>50 ? command[7] = 0b111111 : command[7] = 0b0;
-	command[7] = 0b111111;	// lEDs
+	command[7] = 0b0; //0b111111;	// lEDs
 	command[8] = 0;		// LED2 red
 	command[9] = 0;		// LED2 green
 	command[10] = 0;	// LED2 blue
@@ -488,20 +465,63 @@ void EPuckV2Driver::getVisionSensor(Robot& robot) {
 }
 
 void EPuckV2Driver::PrintSensors() {
+	proxDataRawValuesToMeters();
+	
+
     std::cout << "Iteration N "<<ajouter << "\n"
               //<< "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n";
               //<< "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
 
-	
-    std::cout << "IR0 : " << robot().proximity_sensors.IR[0] << "\n";
-    std::cout << "IR0 : " << robot().proximity_sensors.IR[1] << "\n";
-    std::cout << "IR2 : " << robot().proximity_sensors.IR[2] << "\n";
-    std::cout << "IR3 : " << robot().proximity_sensors.IR[3] << "\n";
-    std::cout << "IR4 : " << robot().proximity_sensors.IR[4] << "\n";
-    std::cout << "IR5 : " << robot().proximity_sensors.IR[5] << "\n";
-    std::cout << "IR6 : " << robot().proximity_sensors.IR[6] << "\n";
-    std::cout << "IR7 : " << robot().proximity_sensors.IR[7] << "\n";
+
+	if(robot().proximity_sensors.IR[0] > 0) {
+		std::cout << "IR0 : " << robot().proximity_sensors.IR[0] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR0 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
+	if(robot().proximity_sensors.IR[1] > 0) {
+		std::cout << "IR1 : " << robot().proximity_sensors.IR[1] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR1 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
+	if(robot().proximity_sensors.IR[2] > 0) {
+		std::cout << "IR2 : " << robot().proximity_sensors.IR[2] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR2 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
+	if(robot().proximity_sensors.IR[3] > 0) {
+		std::cout << "IR3 : " << robot().proximity_sensors.IR[3] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR3 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
+	if(robot().proximity_sensors.IR[4] > 0) {
+		std::cout << "IR4 : " << robot().proximity_sensors.IR[4] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR4 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
+	if(robot().proximity_sensors.IR[5] > 0) {
+		std::cout << "IR5 : " << robot().proximity_sensors.IR[5] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR5 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
+	if(robot().proximity_sensors.IR[6] > 0) {
+		std::cout << "IR6 : " << robot().proximity_sensors.IR[6] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR6 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
+	if(robot().proximity_sensors.IR[7] > 0) {
+		std::cout << "IR7 : " << robot().proximity_sensors.IR[7] << "\n";
+	} else {
+		std::cout << COLOR_COUT_BLACK << "IR7 : NONE" << COLOR_COUT_RESET << "\n";
+	}
+
 /*
     log().addIn(log().file_ePuckPose[0], robot().current_pose.x);
     log().addIn(log().file_ePuckPose[1], robot().current_pose.y);
@@ -522,4 +542,43 @@ void EPuckV2Driver::PrintSensors() {
     log().addIn(log().file_ePuckLeftWheelVelocity, robot().wheels_state.left_velocity);
     log().addIn(log().file_ePuckRightWheelVelocity, robot().wheels_state.right_velocity);
 */
+}
+
+void EPuckV2Driver::proxDataRawValuesToMeters() {
+/*	
+	if(robot().proximity_sensors.IR[0]<0) {
+		robot().proximity_sensors.IR[0]=0;
+	}
+	if(robot().proximity_sensors.IR[1]<0) {
+		robot().proximity_sensors.IR[1]=0;
+	}
+	if(robot().proximity_sensors.IR[2]<0) {
+		robot().proximity_sensors.IR[2]=0;
+	}
+	if(robot().proximity_sensors.IR[3]<0) {
+		robot().proximity_sensors.IR[3]=0;
+	}
+	if(robot().proximity_sensors.IR[4]<0) {
+		robot().proximity_sensors.IR[4]=0;
+	}
+	if(robot().proximity_sensors.IR[5]<0) {
+		robot().proximity_sensors.IR[5]=0;
+	}
+	if(robot().proximity_sensors.IR[6]<0) {
+		robot().proximity_sensors.IR[6]=0;
+	}
+	if(robot().proximity_sensors.IR[7]<0) {
+		robot().proximity_sensors.IR[7]=0;
+	}
+*/
+
+	for (int i = 0;i<8;i++) {
+		if(robot().proximity_sensors.IR[i]> 0) {   
+			robot().proximity_sensors.IR[i] = (0.5/sqrt(robot().proximity_sensors.IR[i]))+ROBOT_RADIUS; // Transform the analog value to a distance value in meters (given from field tests).
+
+		} else { // Sometimes the values could be negative due to the calibration, it means there is no obstacles.
+			robot().proximity_sensors.IR[i] = -1;
+		}
+	}
+
 }

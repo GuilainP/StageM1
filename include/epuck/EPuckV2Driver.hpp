@@ -39,6 +39,11 @@
 #define MAX_VOLTAGE				4.2f	//volt
 #define MIN_VOLTAGE				3.4f	//volt
 
+const double prox_range_min = 0.005+ROBOT_RADIUS; // 0.5 cm + ROBOT_RADIUS.
+const double prox_range_max = 0.05+ROBOT_RADIUS; // 5 cm + ROBOT_RADIUS. 
+const double prox_angle_min = -M_PI/2.0;
+const double prox_angle_max = M_PI/2.0;
+const double prox_angle_increment = M_PI/18.0; // 10 degrees.
 
 
 
