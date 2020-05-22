@@ -52,9 +52,7 @@ public:
 
 private:
     Robot& robot_;
-    Logger log_;
-    
-    
+    Logger log_; 
 };
 
 class EPuckV1Driver : public RobotDriver {
@@ -85,10 +83,9 @@ public:
     void PrintSensors();
     void closeConnection();
     void proxDataRawValuesToMeters();
+    void odometry();
 
 private:
-    std::string robotIP;
-    std::string robotID;
 
     unsigned char image[160*120*2];
     int ajouter;

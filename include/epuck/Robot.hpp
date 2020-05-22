@@ -29,6 +29,8 @@ public:
     Robot();
     ~Robot();
 
+    std::string IP;
+    
     Wheels wheels_state, wheels_command;
     Proximity_sensors proximity_sensors;
     Pose desired_pose, current_pose;

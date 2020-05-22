@@ -14,13 +14,14 @@ void exitLoop(int sig) {
 
 int main(int argc, char** argv) {
 
-    bool real_robot = true;
+    std::string real_robot = argv[1];
     Robot robot;
     std::unique_ptr<RobotDriver> driver;
-    if (real_robot) {
-        driver = std::make_unique<EPuckV2Driver>(robot);
-    } else {
+    if(real_robot == "" ) {
         driver = std::make_unique<EPuckVREPDriver>(robot);
+    } else {
+        robot.IP = argv[1];
+        driver = std::make_unique<EPuckV2Driver>(robot);
     }
 
     std::cout << "Target Velocity : \n"
