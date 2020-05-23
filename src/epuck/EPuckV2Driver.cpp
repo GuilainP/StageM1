@@ -23,6 +23,37 @@ EPuckV2Driver::EPuckV2Driver(Robot& robot) : RobotDriver(robot) {
 
 EPuckV2Driver::~EPuckV2Driver() {
 
+    //std::cout << "send V1\n";
+	command[0] = 0x80;
+	command[1] = 0b00;	// 0b10 Sensors enabled , 0b01 Image enabled
+	command[2] = 0;		// Calibrate proximity sensors.
+	command[3] = 0;		// left motor LSB
+	command[4] = 0;		// left motor MSB
+	command[5] = 0;		// right motor LSB
+	command[6] = 0;		// right motor MSB
+	//(ajouter%100)>50 ? command[7] = 0b111111 : command[7] = 0b0;
+	command[7] = 0b0; //0b111111;	// lEDs
+	command[8] = 0;		// LED2 red
+	command[9] = 0;		// LED2 green
+	command[10] = 0;	// LED2 blue
+	command[11] = 0;	// LED4 red
+	command[12] = 0;	// LED4 green
+	command[13] = 0;	// LED4 blue
+	command[14] = 0;	// LED6 red
+	command[15] = 0;	// LED6 green
+	command[16] = 0;	// LED6 blue
+	command[17] = 0;	// LED8 red
+	command[18] = 0;	// LED8 green
+	command[19] = 0;	// LED8 blue
+	command[20] = 0;	// speaker
+
+	bytes_sent = 0;
+	while(bytes_sent < sizeof(command)) {
+		bytes_sent += send(fd, (char *)&command[bytes_sent], sizeof(command)-bytes_sent, 0);
+	}
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(88));
+
 	closeConnection();
 	std::cout << "DRIVER V2 DESTRUCTED\n";
 }
@@ -199,7 +230,7 @@ void EPuckV2Driver::Read() {
 				bytes_recv = 0;
 				while(bytes_recv < sizeof(sensor)) {
 					ret_value = recv(fd, (char *)&sensor[bytes_recv], sizeof(sensor)-bytes_recv, 0);
-					if(ret_value <= 0) {
+					if(ret_value <= 0) { 
 						closeConnection();
 						if(Init() == false ) {
 							std::cerr << "Lost connection with the robot" << std::endl;
@@ -225,8 +256,8 @@ void EPuckV2Driver::Read() {
 					mantis = -mantis;
 				}
 				flt = (mantis || exp) ? ((float) ldexp (mantis, (exp - 127 - 23))): 0;
-				acceleration=flt;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "acceleration: " << acceleration << std::endl;
+				robot().acceleration=flt;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "acceleration: " << robot().acceleration << std::endl;
 
 				// Compute orientation.
 				mantis = (sensor[10] & 0xff) + ((sensor[11] & 0xffl) << 8) + (((sensor[12] &0x7fl) | 0x80) << 16);
@@ -234,12 +265,12 @@ void EPuckV2Driver::Read() {
 				if (sensor[13] & 0x80)
 					mantis = -mantis;
 				flt = (mantis || exp) ? ((float) ldexp (mantis, (exp - 127 - 23))): 0;
-				orientation=flt;
-				if (orientation < 0.0 )
-					orientation=0.0;
-				if (orientation > 360.0 )
-					orientation=360.0;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "orientation: " << orientation << std::endl;
+				robot().orientation=flt;
+				if (robot().orientation < 0.0 )
+					robot().orientation=0.0;
+				if (robot().orientation > 360.0 )
+					robot().orientation=360.0;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "orientation: " << robot().orientation << std::endl;
 
 				// Compute inclination.
 				mantis = (sensor[14] & 0xff) + ((sensor[15] & 0xffl) << 8) + (((sensor[16] &0x7fl) | 0x80) << 16);
@@ -247,28 +278,28 @@ void EPuckV2Driver::Read() {
 				if (sensor[17] & 0x80)
 					mantis = -mantis;
 				flt = (mantis || exp) ? ((float) ldexp (mantis, (exp - 127 - 23))): 0;
-				inclination=flt;
-				if (inclination < 0.0 )
-					inclination=0.0;
-				if (inclination > 180.0 )
-					inclination=180.0;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "inclination: " << inclination << std::endl;
+				robot().inclination=flt;
+				if (robot().inclination < 0.0 )
+					robot().inclination=0.0;
+				if (robot().inclination > 180.0 )
+					robot().inclination=180.0;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "inclination: " << robot().inclination << std::endl;
 
 				// Gyro
-				gyroRaw[0] = sensor[18]+sensor[19]*256;
-				gyroRaw[1] = sensor[20]+sensor[21]*256;
-				gyroRaw[2] = sensor[22]+sensor[23]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "gyro: " << gyroRaw[0] << "," << gyroRaw[1] << "," << gyroRaw[2] << std::endl;					
+				robot().gyroRaw[0] = sensor[18]+sensor[19]*256;
+				robot().gyroRaw[1] = sensor[20]+sensor[21]*256;
+				robot().gyroRaw[2] = sensor[22]+sensor[23]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "gyro: " << robot().gyroRaw[0] << "," << robot().gyroRaw[1] << "," << robot().gyroRaw[2] << std::endl;					
 
 				// Magnetometer
-				magneticField[0] = *((float*)&sensor[24]);
-				magneticField[1] = *((float*)&sensor[28]);
-				magneticField[2] = *((float*)&sensor[32]);
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "mag: " << magneticField[0] << "," << magneticField[1] << "," << magneticField[2] << std::endl;	
+				robot().magneticField[0] = *((float*)&sensor[24]);
+				robot().magneticField[1] = *((float*)&sensor[28]);
+				robot().magneticField[2] = *((float*)&sensor[32]);
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "mag: " << robot().magneticField[0] << "," << robot().magneticField[1] << "," << robot().magneticField[2] << std::endl;	
 
 				// Temperature.
-				temperature = sensor[36];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "temperature: " << (int)temperature << std::endl;
+				robot().temperature = sensor[36];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "temperature: " << (int)robot().temperature << std::endl;
 
 				// Proximity sensors data.
 				robot().proximity_sensors.IR[0] = sensor[37]+sensor[38]*256;
@@ -283,74 +314,74 @@ void EPuckV2Driver::Read() {
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "prox: " << robot().proximity_sensors.IR[0] << "," << robot().proximity_sensors.IR[1] << "," << robot().proximity_sensors.IR[2] << "," << robot().proximity_sensors.IR[3] << "," << robot().proximity_sensors.IR[4] << "," << robot().proximity_sensors.IR[5] << "," << robot().proximity_sensors.IR[6] << "," << robot().proximity_sensors.IR[7] << std::endl;							
 
 				// Compute abmient light.
-				lightAvg += (sensor[53]+sensor[54]*256);
-				lightAvg += (sensor[55]+sensor[56]*256);
-				lightAvg += (sensor[57]+sensor[58]*256);
-				lightAvg += (sensor[59]+sensor[60]*256);
-				lightAvg += (sensor[61]+sensor[62]*256);
-				lightAvg += (sensor[63]+sensor[64]*256);
-				lightAvg += (sensor[65]+sensor[66]*256);
-				lightAvg += (sensor[67]+sensor[68]*256);
-				lightAvg = (int) (lightAvg/8);
-				lightAvg = (lightAvg>4000)?4000:lightAvg;
-				if(lightAvg<0) {
-					lightAvg=0;
+				robot().lightAvg += (sensor[53]+sensor[54]*256);
+				robot().lightAvg += (sensor[55]+sensor[56]*256);
+				robot().lightAvg += (sensor[57]+sensor[58]*256);
+				robot().lightAvg += (sensor[59]+sensor[60]*256);
+				robot().lightAvg += (sensor[61]+sensor[62]*256);
+				robot().lightAvg += (sensor[63]+sensor[64]*256);
+				robot().lightAvg += (sensor[65]+sensor[66]*256);
+				robot().lightAvg += (sensor[67]+sensor[68]*256);
+				robot().lightAvg = (int) (robot().lightAvg/8);
+				robot().lightAvg = (robot().lightAvg>4000)?4000:robot().lightAvg;
+				if(robot().lightAvg<0) {
+					robot().lightAvg=0;
 				}
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP << "] " << "lightAvg: " << lightAvg << std::endl;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP << "] " << "lightAvg: " << robot().lightAvg << std::endl;
 				
 				// ToF
-				distanceCm = (uint16_t)(((uint8_t)sensor[70]<<8)|((uint8_t)sensor[69]))/10;
-				if(distanceCm > 200) {
-					distanceCm = 200;
+				robot().distanceCm = (uint16_t)(((uint8_t)sensor[70]<<8)|((uint8_t)sensor[69]))/10;
+				if(robot().distanceCm > 200) {
+					robot().distanceCm = 200;
 				}
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "distanceCm: " << distanceCm << "(" << (int)sensor[69] << "," << (int)sensor[70] << ")" << std::endl;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "distanceCm: " << robot().distanceCm << "(" << (int)sensor[69] << "," << (int)sensor[70] << ")" << std::endl;
 
 				// Microphone
-				micVolume[0] = ((uint8_t)sensor[71]+(uint8_t)sensor[72]*256);
-				micVolume[1] = ((uint8_t)sensor[73]+(uint8_t)sensor[74]*256);
-				micVolume[2] = ((uint8_t)sensor[75]+(uint8_t)sensor[76]*256);
-				micVolume[3] = ((uint8_t)sensor[77]+(uint8_t)sensor[78]*256);
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "mic: " << micVolume[0] << "," << micVolume[1] << "," << micVolume[2] << "," << micVolume[3] << std::endl;
+				robot().micVolume[0] = ((uint8_t)sensor[71]+(uint8_t)sensor[72]*256);
+				robot().micVolume[1] = ((uint8_t)sensor[73]+(uint8_t)sensor[74]*256);
+				robot().micVolume[2] = ((uint8_t)sensor[75]+(uint8_t)sensor[76]*256);
+				robot().micVolume[3] = ((uint8_t)sensor[77]+(uint8_t)sensor[78]*256);
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "mic: " << robot().micVolume[0] << "," << robot().micVolume[1] << "," << robot().micVolume[2] << "," << robot().micVolume[3] << std::endl;
 
 				// Left steps
-				robot().wheels_state.left_position = (double)(sensor[79]+sensor[80]*256);
+				motorSteps[0] = (double)(sensor[79]+sensor[80]*256);
 				// Right steps
-				robot().wheels_state.right_position = (double)(sensor[81]+sensor[82]*256);
+				motorSteps[1] = (double)(sensor[81]+sensor[82]*256);
 				//if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "steps: " << motorSteps[0] << "," << motorSteps[1] << std::endl;
 
 				// Battery
-				batteryRaw = (uint8_t)sensor[83]+(uint8_t)sensor[84]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "batteryRaw: " << batteryRaw << std::endl;
+				robot().batteryRaw = (uint8_t)sensor[83]+(uint8_t)sensor[84]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "batteryRaw: " << robot().batteryRaw << std::endl;
 				
 				// Micro sd state.
-				microSdState = sensor[85];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "microSdState: " << (int)microSdState << std::endl;
+				robot().microSdState = sensor[85];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "microSdState: " << (int)robot().microSdState << std::endl;
 
 				// Tv remote.
-				irCheck = sensor[86];
-				irAddress = sensor[87];
-				irData = sensor[88];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "tv remote: " << (int)irCheck << "," << (int)irAddress << "," << (int)irData << std::endl;
+				robot().irCheck = sensor[86];
+				robot().irAddress = sensor[87];
+				robot().irData = sensor[88];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "tv remote: " << (int)robot().irCheck << "," << (int)robot().irAddress << "," << (int)robot().irData << std::endl;
 
 				// Selector.
-				selector = sensor[89];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "selector: " << (int)selector << std::endl;
+				robot().selector = sensor[89];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "selector: " << (int)robot().selector << std::endl;
 
 				// Ground sensor proximity.
-				groundProx[0] = sensor[90]+sensor[91]*256;
-				groundProx[1] = sensor[92]+sensor[93]*256;
-				groundProx[2] = sensor[94]+sensor[95]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "groundProx: " << groundProx[0] << "," << groundProx[1] << "," << groundProx[2] << std::endl;
+				robot().groundProx[0] = sensor[90]+sensor[91]*256;
+				robot().groundProx[1] = sensor[92]+sensor[93]*256;
+				robot().groundProx[2] = sensor[94]+sensor[95]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "groundProx: " << robot().groundProx[0] << "," << robot().groundProx[1] << "," << robot().groundProx[2] << std::endl;
 
 				// Ground sensor ambient light.
-				groundAmbient[0] = sensor[96]+sensor[97]*256;
-				groundAmbient[1] = sensor[98]+sensor[99]*256;
-				groundAmbient[2] = sensor[100]+sensor[101]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "groundAmbient: " << groundAmbient[0] << "," << groundAmbient[1] << "," << groundAmbient[2] << std::endl;
+				robot().groundAmbient[0] = sensor[96]+sensor[97]*256;
+				robot().groundAmbient[1] = sensor[98]+sensor[99]*256;
+				robot().groundAmbient[2] = sensor[100]+sensor[101]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "groundAmbient: " << robot().groundAmbient[0] << "," << robot().groundAmbient[1] << "," << robot().groundAmbient[2] << std::endl;
 
 				// Button state.
-				buttonState = sensor[102];			
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "buttonState: " << (int)buttonState << std::endl;
+				robot().buttonState = sensor[102];			
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().IP  << "] " << "buttonState: " << (int)robot().buttonState << std::endl;
 
 				break;
 			
@@ -435,11 +466,12 @@ void EPuckV2Driver::getVisionSensor(Robot& robot) {
 }
 
 void EPuckV2Driver::PrintSensors() {
+	positionDataCorrection();
 	proxDataRawValuesToMeters();
 	
 
     std::cout << "Iteration N "<<ajouter << "\n"
-              //<< "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
+              << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n";
               //<< "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
 
@@ -492,11 +524,11 @@ void EPuckV2Driver::PrintSensors() {
 		std::cout << COLOR_COUT_BLACK << "IR7 : NONE" << COLOR_COUT_RESET << "\n";
 	}
 
-/*
+
     log().addIn(log().file_ePuckPose[0], robot().current_pose.x);
     log().addIn(log().file_ePuckPose[1], robot().current_pose.y);
     log().addIn(log().file_ePuckPose[2], robot().current_pose.th);
-*/
+
     log().addIn(log().file_IR[0], robot().proximity_sensors.IR[0]);
     log().addIn(log().file_IR[1], robot().proximity_sensors.IR[1]);
     log().addIn(log().file_IR[2], robot().proximity_sensors.IR[2]);
@@ -523,4 +555,49 @@ void EPuckV2Driver::proxDataRawValuesToMeters() {
 			robot().proximity_sensors.IR[i] = -1;
 		}
 	}
+}
+
+
+void EPuckV2Driver::positionDataCorrection() {
+	if((leftStepsRawPrev>0) && (motorSteps[0]<0) && (abs(motorSteps[0]-leftStepsRawPrev)>30000)) {     // Overflow detected (positive).
+		overflowCountLeft++;
+	}
+	if((leftStepsRawPrev<0) && (motorSteps[0]>0) && (abs(motorSteps[0]-leftStepsRawPrev)>30000)) {     // Overflow detected (negative).
+		overflowCountLeft--;
+	}
+	motorPositionDataCorrect[0] = (overflowCountLeft*65536) + motorSteps[0];
+	
+	if((rightStepsRawPrev>0) && (motorSteps[1]<0) && (abs(motorSteps[1]-rightStepsRawPrev)>30000)) {     // Overflow detected (positive).
+		overflowCountRight++;
+	}
+	if((rightStepsRawPrev<0) && (motorSteps[1]>0) && (abs(motorSteps[1]-rightStepsRawPrev)>30000)) {     // Overflow detected (negative).
+		overflowCountRight--;
+	}
+	motorPositionDataCorrect[1]  = (overflowCountRight*65536) + motorSteps[1];        
+	
+	leftStepsRawPrev = motorSteps[0];
+	rightStepsRawPrev = motorSteps[1];
+	
+	if(DEBUG_ODOMETRY)std::cout << "[" << robot().IP << "] " << "left, right raw: " << motorSteps[0] << ", " << motorSteps[1] << std::endl;
+	if(DEBUG_ODOMETRY)std::cout << "[" << robot().IP << "] " << "left, right raw corrected: " << robot().wheels_state.left_position  << ", " << robot().wheels_state.right_position  << std::endl;
+
+	// Compute odometry.
+	leftStepsDiff = motorPositionDataCorrect[0]*MOT_STEP_DIST - leftStepsPrev; // Expressed in meters.
+	rightStepsDiff = motorPositionDataCorrect[1]*MOT_STEP_DIST - rightStepsPrev;   // Expressed in meters.
+	if(DEBUG_ODOMETRY)std::cout << "[" << robot().IP << "] " << "left, right steps diff: " << leftStepsDiff << ", " << rightStepsDiff << std::endl;
+	
+	deltaTheta = (rightStepsDiff - leftStepsDiff)/WHEEL_DISTANCE;   // Expressed in radiant.
+	deltaSteps = (rightStepsDiff + leftStepsDiff)/2;        // Expressed in meters.
+	if(DEBUG_ODOMETRY)std::cout << "[" << robot().IP << "] " << "delta theta, steps: " << deltaTheta << ", " << deltaSteps << std::endl;
+
+	robot().current_pose.x += deltaSteps*cos(theta + deltaTheta/2);   // Expressed in meters.
+	robot().current_pose.y += deltaSteps*sin(theta + deltaTheta/2);   // Expressed in meters.
+	robot().current_pose.th += deltaTheta;    // Expressed in radiant.
+	if(DEBUG_ODOMETRY)std::cout << "[" << robot().IP << "] " << "x, y, theta: " << robot().current_pose.x << ", " << robot().current_pose.y << ", " << robot().current_pose.th << std::endl;
+	
+	leftStepsPrev = motorPositionDataCorrect[0]*MOT_STEP_DIST;     // Expressed in meters.
+	rightStepsPrev = motorPositionDataCorrect[1]*MOT_STEP_DIST;    // Expressed in meters.
+
+	robot().wheels_state.left_position= (motorPositionDataCorrect[0]%1000)*(2*M_PI/1000);
+	robot().wheels_state.right_position= (motorPositionDataCorrect[1]%1000)*(2*M_PI/1000);
 }

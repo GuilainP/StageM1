@@ -83,6 +83,7 @@ public:
     void PrintSensors();
     void closeConnection();
     void proxDataRawValuesToMeters();
+    void positionDataCorrection();
     void odometry();
 
 private:
@@ -100,24 +101,10 @@ private:
     uint8_t expected_recv_packets;
     bool newImageReceived;
 
-    // Sensors data variables
+    // EPuckV2 data variables
 
-    float acceleration, orientation, inclination;		/**< acceleration data*/
     int16_t accData[3];
-    int16_t gyroRaw[3];
-    float magneticField[3];
-    uint8_t temperature;
-    int proxData[8]; /**< proximity sensors data*/
-    int lightAvg;										/**< light sensor data*/
-    uint16_t distanceCm;
-    uint16_t micVolume[4];								/**< microphone data*/
     int16_t motorSteps[2];
-    uint16_t batteryRaw;
-    uint8_t microSdState;
-    uint8_t irCheck, irAddress, irData;
-    uint8_t selector;
-    int16_t groundProx[3], groundAmbient[3];
-    uint8_t buttonState;
 
     double leftStepsDiff, rightStepsDiff;
     double leftStepsPrev, rightStepsPrev;
@@ -145,7 +132,7 @@ public:
     void setVelocity(double, double);
     void PrintSensors();
     void dataToRobot();
-    
+
 
 private:
     int clientID, pingTime;

@@ -35,6 +35,27 @@ public:
     Proximity_sensors proximity_sensors;
     Pose desired_pose, current_pose;
     cv::Mat vision_sensors;
+
+    /*** ADDITIONNAL DATA FOR EPUCK V2 */
+
+    // Sensors data variables
+
+    float acceleration, orientation, inclination;		/**< acceleration data*/
+
+    int16_t gyroRaw[3];
+    float magneticField[3];
+    uint8_t temperature;
+    int lightAvg;										/**< light sensor data*/
+    
+    uint16_t distanceCm;
+    uint16_t micVolume[4];								/**< microphone data*/
+    int16_t motorSteps[2];
+    uint16_t batteryRaw;
+    uint8_t microSdState;
+    uint8_t irCheck, irAddress, irData;
+    uint8_t selector;
+    int16_t groundProx[3], groundAmbient[3];
+    uint8_t buttonState;
 };
 // current_pose.th [-pi/2;pi/2]
 // wheels_state.*_position [-pi, pi]
