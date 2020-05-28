@@ -19,9 +19,12 @@ int main(int argc, char** argv) {
     std::unique_ptr<RobotDriver> driver;
     if(real_robot == "" ) {
         driver = std::make_unique<EPuckVREPDriver>(robot);
-    } else {
-        robot.IP = argv[1];
+    } else if (real_robot == "V2"){
+        robot.ip = argv[2];
         driver = std::make_unique<EPuckV2Driver>(robot);
+    } else if (real_robot == "V1"){
+        robot.ip = argv[2];
+        driver = std::make_unique<EPuckV1Driver>(robot);
     }
 
     std::cout << "Target Velocity : \n"

@@ -86,35 +86,35 @@ public:
     void positionDataCorrection();
     void odometry();
 
+
 private:
 
-    unsigned char image[160*120*2];
-    int ajouter;
+    unsigned char image_[160*120*2];
+    int ajouter_;
 
     // Communication variables
-    struct sockaddr_in robot_addr;
-    int fd;
-    unsigned char command[21];
-    unsigned char header, sensor[104];
+    struct sockaddr_in robot_addr_;
+    int fd_;
+    unsigned char command_[21];
+    unsigned char header_, sensor_[104];
     int bytes_sent, bytes_recv ;
     bool camera_enabled, ground_sensors_enabled;
     uint8_t expected_recv_packets;
-    bool newImageReceived;
+    bool new_image_received_;
 
     // EPuckV2 data variables
 
-    int16_t accData[3];
-    int16_t motorSteps[2];
+    int16_t acc_data_[3];
+    int16_t motor_steps_[2];
 
-    double leftStepsDiff, rightStepsDiff;
-    double leftStepsPrev, rightStepsPrev;
-    signed long int leftStepsRawPrev, rightStepsRawPrev;
-    signed long int motorPositionDataCorrect[2];
-    double xPos, yPos, theta;
-    double deltaSteps, deltaTheta;
+    double left_steps_diff_, right_steps_diff_;
+    double left_steps_prev_, right_steps_prev_;
+    signed long int left_steps_raw_prev_, right_steps_raw_prev_;
+    signed long int motor_position_data_correct_[2];
+    double delta_steps_, delta_theta_;
 
-    int overflowCountLeft, overflowCountRight ;
-    int16_t gyroOffset[3] ; // Used if making an initial calibration of the gyro.
+    int overflow_count_left_, overflow_count_right_ ;
+    int16_t gyro_offset_[3] ; // Used if making an initial calibration of the gyro.
 
 
 };
@@ -135,20 +135,20 @@ public:
 
 
 private:
-    int clientID, pingTime;
-    int ePuckHandle;
-    int rightJointHandle, leftJointHandle;
-    int proxSensorsHandle[8];
-    int visionHandle;
-    int res[2];
-    float ePuckPosition[3];
-    float leftJointPosition, rightJointPosition;
-    float leftJointVelocity[3], rightJointVelocity[3];
-    float eulerAngles[3];
-    uint8_t detectionStateIR[8];
-    float detectedPointIR[8][3];
-    uint8_t* simImage;
-    int ajouter;
+    int client_id_, ping_time_;
+    int epuck_handle_;
+    int right_joint_handle_, left_joint_handle_;
+    int prox_sensors_handle_[8];
+    int vision_handle_;
+    int res_[2];
+    float epuck_position_[3];
+    float left_joint_position_, right_joint_position_;
+    float left_joint_velocity_[3], right_joint_velocity_[3];
+    float euler_angles_[3];
+    uint8_t detection_state_ir_[8];
+    float detected_point_ir_[8][3];
+    uint8_t* sim_image_;
+    int ajouter_;
     
-    double minl,maxl,minr,maxr;
+    double minl_,maxl_,minr_,maxr_;
 };
