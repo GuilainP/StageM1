@@ -4,6 +4,9 @@
 #include <opencv2/core/mat.hpp>
 
 struct Pose {
+    Pose(){}
+    Pose(double a, double b, double c) {setPose(a,b,c);}
+    void setPose(double a, double b, double c) {x=a; y=b; th=c;}
     double x{0}, y{0}, th{0};
 };
 

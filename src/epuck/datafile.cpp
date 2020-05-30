@@ -58,14 +58,6 @@ void Logger::CloseAll() {
     // FROM EPUCK.CPP
     file_eg.close();
     file_ed.close();
-    file_p0.close();
-    file_p1.close();
-    file_p2.close();
-    file_p3.close();
-    file_p4.close();
-    file_p5.close();
-    file_p6.close();
-    file_p7.close();
     file_p8.close();
     file_p9.close();
 
@@ -165,14 +157,6 @@ void Logger::fileGeneration() {
     // FROM EPUCK.CPP
     file_eg.open(folder_ + "/data/eg.txt");
     file_ed.open(folder_ + "/data/ed.txt");
-    file_p0.open(folder_ + "/data/p0.txt");
-    file_p1.open(folder_ + "/data/p1.txt");
-    file_p2.open(folder_ + "/data/p2.txt");
-    file_p3.open(folder_ + "/data/p3.txt");
-    file_p4.open(folder_ + "/data/p4.txt");
-    file_p5.open(folder_ + "/data/p5.txt");
-    file_p6.open(folder_ + "/data/p6.txt");
-    file_p7.open(folder_ + "/data/p7.txt");
     file_p8.open(folder_ + "/data/p8.txt");
     file_p9.open(folder_ + "/data/p9.txt");
 

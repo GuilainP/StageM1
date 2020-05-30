@@ -41,14 +41,6 @@ public:
 
     std::ofstream file_eg;
     std::ofstream file_ed;
-    std::ofstream file_p0;
-    std::ofstream file_p1;
-    std::ofstream file_p2;
-    std::ofstream file_p3;
-    std::ofstream file_p4;
-    std::ofstream file_p5;
-    std::ofstream file_p6;
-    std::ofstream file_p7;
     std::ofstream file_p8;
     std::ofstream file_p9;
 
