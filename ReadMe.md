@@ -37,8 +37,12 @@ Se rendre dans le dossier StageM1/build/ et faire les commandes suivantes:
     $ make
 
 Pour lancer l'application taper :
-
-    $ ./apps/robot
+```sh
+	$ # lancer la simulation
+	$ ./apps/robot setWheelCmd 127.0.0.1 5 -5 
+	$ # Command pour un robot
+    $ ./apps/robot setWheelCmd 192.168.1.8 50 -50  
+```
 
 
 Application : 
