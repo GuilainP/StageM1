@@ -20,43 +20,35 @@ void exitLoop(int sig) {
 
 int main(int argc, char** argv) {
 
-    std::string real_robot = argv[1];
+
     Robot robot;
+    robot.ip = argv[2];
     std::unique_ptr<RobotDriver> driver;
-    if(real_robot == "SIM" ) {
-        driver = std::make_unique<EPuckVREPDriver>(robot);
-    } else if (real_robot == "V2"){
-        robot.ip = argv[2];
-        driver = std::make_unique<EPuckV2Driver>(robot);
+
+    if(robot.ip.size() == 11 ) {
+        driver = std::make_unique<EPuckV1Driver>(robot,argv);
+    } else if (robot.ip.size() == 13){
+        driver = std::make_unique<EPuckV2Driver>(robot,argv);
+    } else if (robot.ip == "127.0.0.1"){  
+        driver = std::make_unique<EPuckVREPDriver>(robot,argv);
     } else {
-        robot.ip = argv[2];
-        driver = std::make_unique<EPuckV1Driver>(robot,argv, signaled);
+        return -1;
     }
 
-    if(real_robot == "SIM" || real_robot == "V2") {
-        std::cout << "Target Velocity : \n"
-              << "Left Speed  [rad/s]: ";
-        std::cin >> robot.wheels_command.left_velocity;
-        std::cout << "Right Speed [rad/s]: ";
-        std::cin >> robot.wheels_command.right_velocity;
-        std::cout << std::endl;
-    }
-
-    driver->Init();
+    driver->init();
     
     std::signal(SIGINT, exitLoop);
     while (true) {
-        if (signaled == true) {
-            break;
-        }
-
-        driver->Read();
+        driver->read();
 
         driver->getVisionSensor(robot);
 
-        driver->Send();
-    }
+        driver->sendCmd();
 
+        if (signaled == true) {
+            break;
+        }
+    }
 
 }
 
