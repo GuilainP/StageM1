@@ -12,11 +12,18 @@
 #include <thread>
 #include <chrono>
 
-EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot), ajouter_(1) {
+EPuckVREPDriver::EPuckVREPDriver(Robot& robot, char** arg) : RobotDriver(robot, arg)  {
+    cnt_iter = 1;
+
+    std::string mode = argv[1];
+    if (mode == "setWheelCmd") {
+		robot.wheels_command.left_velocity = std::stod(argv[3]);
+		robot.wheels_command.right_velocity = std::stod(argv[4]);
+	}
 }
  
-bool EPuckVREPDriver::Init() {
-    client_id_ = simxStart((simxChar*)"127.0.0.1", 19997, true, true, 2000, 5);
+bool EPuckVREPDriver::init() {
+    client_id_ = simxStart((simxChar*)robot().ip.c_str(), 19997, true, true, 2000, 5);
     std::cout << "clientID = " << client_id_ << std::endl;
 
     if (client_id_ == -1) {
@@ -68,8 +75,6 @@ bool EPuckVREPDriver::Init() {
         simxGetObjectVelocity(client_id_, left_joint_handle_, NULL, left_joint_velocity_, simx_opmode_streaming);
         simxGetObjectVelocity(client_id_, right_joint_handle_, NULL, right_joint_velocity_, simx_opmode_streaming);
 
-       
-
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         
         return true;
@@ -77,7 +82,7 @@ bool EPuckVREPDriver::Init() {
 }
 
 
-void EPuckVREPDriver::Read() {
+void EPuckVREPDriver::read() {
 
     simxSynchronousTrigger(client_id_);
 
@@ -107,10 +112,10 @@ void EPuckVREPDriver::Read() {
     simxGetPingTime(client_id_, &ping_time_);
 
 
-    PrintSensors();
+    printSensors();
 }
 
-void EPuckVREPDriver::Send() {
+void EPuckVREPDriver::sendCmd() {
     simxPauseCommunication(client_id_, 1);
     simxSetJointTargetVelocity(client_id_, left_joint_handle_, robot().wheels_command.left_velocity, simx_opmode_oneshot);
     simxSetJointTargetVelocity(client_id_, right_joint_handle_, robot().wheels_command.right_velocity, simx_opmode_oneshot);
@@ -125,9 +130,9 @@ void EPuckVREPDriver::getVisionSensor(Robot& robot) {
 	cv::imshow("Camera", robot.vision_sensors);
 	cv::waitKey(1);
     
-	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(ajouter_).length(), '0').append( std::to_string(ajouter_)) + ".png", robot.vision_sensors);
+	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(cnt_iter).length(), '0').append( std::to_string(cnt_iter)) + ".png", robot.vision_sensors);
 
-	++ajouter_;
+	++cnt_iter;
 }
 
 EPuckVREPDriver::~EPuckVREPDriver() {
@@ -136,9 +141,9 @@ EPuckVREPDriver::~EPuckVREPDriver() {
     std::cout << "End of the program" << std::endl;
 }
 
-void EPuckVREPDriver::PrintSensors() {
+void EPuckVREPDriver::printSensors() {
     dataToRobot();
-    std::cout << COLOR_COUT_BLUE << "Iteration N"<< ajouter_ << "\n" << COLOR_COUT_RESET
+    std::cout << COLOR_COUT_BLUE << "Iteration N"<< cnt_iter << "\n" << COLOR_COUT_RESET
               << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
               << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;

@@ -9,7 +9,7 @@ Logger& RobotDriver::log() {
 }
 
 /**** Show image from the robot camera and save it on the disk ****/
-cv::Mat RobotDriver::ShowAndSaveRobotImage(unsigned char* imgData, const int& cnt_it) {
+cv::Mat RobotDriver::showAndSaveRobotImage(unsigned char* imgData, const int& cnt_it) {
     cv::Mat rawImg =  cv::Mat(240, 320, CV_8UC3, imgData);
     cv::Mat img;
     cv::cvtColor(rawImg, img, cv::COLOR_RGB2BGRA); 

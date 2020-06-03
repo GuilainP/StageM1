@@ -25,38 +25,37 @@
 
 #define HERE(X) std::cout << "HI THERE " << X <<  std::endl
 
-EPuckV1Driver::EPuckV1Driver(Robot& robot,char** argv, bool& sig) : RobotDriver(robot), argv_(argv), stop_threads(sig) {
-    cnt_iter = 0;
+EPuckV1Driver::EPuckV1Driver(Robot& robot, char** arg) : RobotDriver(robot, arg) {
+    stop_threads = false;
     camera_active = true;
 }
 
 EPuckV1Driver::~EPuckV1Driver() {
     stop_threads = true;
     // Send a zero velocity command before exiting
-    SetWheelCommands(startTime, 0, 0, MotorCommand);
-    SendMotorAndLEDCommandToRobot(MotorCommand);
+    setWheelCommands(startTime, 0, 0, MotorCommand);
+    sendMotorAndLEDCommandToRobot(MotorCommand);
     std::cout << "All good, mate\n";
 
     pthread_join(IDCameraReceptionThread, NULL);
-    //pthread_join(IDMainThread, NULL);
 
     //signal(SIGINT, nullptr);
 
-    CloseSocket(camera_socket);
+    closeSocket(camera_socket);
 
-    CloseSocket(command_sending_socket);
-    CloseSocket(sensor_receiving_socket);
+    closeSocket(command_sending_socket);
+    closeSocket(sensor_receiving_socket);
 }
 
-bool EPuckV1Driver::Init() {
-    InitCamera(robot().ip); // sends camera state info to epuck
+bool EPuckV1Driver::init() {
+    initCamera(robot().ip); // sends camera state info to epuck
 
-    OpenSensorReceivingSocket();
-    OpenCommandSendingSocket(robot().ip);
+    openSensorReceivingSocket();
+    openCommandSendingSocket(robot().ip);
 
-    OpenCameraSocket();
+    openCameraSocket();
 
-    if (pthread_create(&IDCameraReceptionThread, NULL, CameraThreadFunc, this) == -1) {
+    if (pthread_create(&IDCameraReceptionThread, NULL, cameraThreadFunc, this) == -1) {
         printf("Error while creating the camera reception thread!\n");
         return false;
     } else {
@@ -65,51 +64,50 @@ bool EPuckV1Driver::Init() {
 
     std::cout << "\nINIT \n";
     int argc = 0;
-    while (argv_[argc] != NULL) {
+    while (argv[argc] != NULL) {
         argc++;
     }
     
-    std::string cont = argv_[1];  ///SAFE//
-    //robot().ip = argv_[2];
+    std::string cont = argv[1];
     
     if (cont == "setWheelCmd") {
         if (argc != 5) {
-            IncorrectArguments(argc);
+            incorrectArguments(argc);
         } else {
             c = setWheelCmd;
-            speedLeft = strtol(argv_[3], NULL, 10);
-            speedRight = strtol(argv_[4], NULL, 10);
+            speedLeft = std::stol(argv[3]);
+            speedRight = std::stol(argv[4]);
         }
     } else if (cont == "setVel") {
         if (argc != 5) {
-            IncorrectArguments(argc);
+            incorrectArguments(argc);
         } else {
             c = setVel;
-            vel = strtod(argv_[3], NULL);
-            omega = strtod(argv_[4], NULL);
+            vel = std::stol(argv[3]);
+            omega = std::stod(argv[4]);
         }
     } else if (cont == "setRobVel") {
         if (argc != 5) {
-            IncorrectArguments(argc);
+            incorrectArguments(argc);
         } else {
             c = setRobVel;
-            vel = strtod(argv_[3], NULL);
-            omega = strtod(argv_[4], NULL);
+            vel = std::stod(argv[3]);
+            omega = std::stod(argv[4]);
         }
     } else if (cont == "followWall") {
         if (argc != 3)
-            IncorrectArguments(argc);
+            incorrectArguments(argc);
         else
             c = followWall;
     } else if (cont == "visServo") {
         if (argc != 3)
-            IncorrectArguments(argc);
+            incorrectArguments(argc);
         else
             c = visServo;
     } else {
-        IncorrectArguments(argc);
+        incorrectArguments(argc);
     }
-    std::cout << "Controller is "<< argv_[1] << "\n";
+    std::cout << "Controller is "<< argv[1] << "\n";
     cnt_iter = 1; // to get the current iteration
     gettimeofday(&startTime, NULL); // get starting time
     initPose.setPose(.32, 0., M_PI);
@@ -118,15 +116,15 @@ bool EPuckV1Driver::Init() {
 }
 
 // TODO
-void EPuckV1Driver::Read() {
-    //robot().vision_sensors = ShowAndSaveRobotImage(img_data.msg, cnt_iter); 
+void EPuckV1Driver::read() {
+    //robot().vision_sensors = showAndSaveRobotImage(img_data.msg, cnt_iter); 
     std::cout << "\033[1;36m";//write in bold cyan
     std::cout << "\nSTART ITERATION " << cnt_iter <<" \n";
     std::cout << "\033[0m";//reset color
     gettimeofday(&prevTime, NULL);
     //show and save image
     if (camera_active == true) {
-        robImg = ShowAndSaveRobotImage(img_data.msg, cnt_iter);
+        robImg = showAndSaveRobotImage(img_data.msg, cnt_iter);
     }
     gettimeofday(&curTime, NULL);
     timeSinceStart = (curTime.tv_sec - prevTime.tv_sec) * 1e3 + (curTime.tv_usec - prevTime.tv_usec) * 1e-3;
@@ -147,8 +145,8 @@ void EPuckV1Driver::Read() {
     prevPoseFromEnc = curPoseFromEnc;
     prevPoseFromVis = curPoseFromVis;
 
-    ReceiveSensorMeasures(); // receive data from encoders and proximity sensors///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    SplitSensorMeasures(); // splits measures and converts them to integer///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    receiveSensorMeasures(); // receive data from encoders and proximity sensors///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    splitSensorMeasures(); // splits measures and converts them to integer///////////////////////////////////////////////////////////////////////////////////////////////////////////
     float dist[10];
     InfraRedValuesToMetricDistance(robot().parameters, prox_sensors, dist, log());
     cv::Point2f ProxInWFrame[10];
@@ -158,7 +156,7 @@ void EPuckV1Driver::Read() {
 
     //control robot
     if (c == setWheelCmd) {
-        SetWheelCommands(startTime, speedLeft, speedRight, MotorCommand); // send commmands to wheels
+        setWheelCommands(startTime, speedLeft, speedRight, MotorCommand); // send commmands to wheels
     } else if (c == setVel) {
         SetVelocities(startTime, vel, omega, MotorCommand); // send operational velocities to robot to be done by students
     } else if (c == setRobVel) {
@@ -171,13 +169,13 @@ void EPuckV1Driver::Read() {
         SetRobotVelocities(robot().parameters, startTime, vel, omega, MotorCommand); // send operational velocities to robot
     }
 
-    SaveData(log());
+    saveData(log());
 
 };
 
 
-void EPuckV1Driver::Send() {
-    SendMotorAndLEDCommandToRobot(MotorCommand);
+void EPuckV1Driver::sendCmd() {
+    sendMotorAndLEDCommandToRobot(MotorCommand);
 
     cnt_iter++;
 
@@ -195,8 +193,8 @@ void EPuckV1Driver::getVisionSensor(Robot& robot) {
 
 
 /**** fonction initialisation Camera ****/
-void EPuckV1Driver::InitCamera(const std::string& epuck_ip) {
-    InitSocketOpening(robot().ip); // ouverture de la socket d'initialisation
+void EPuckV1Driver::initCamera(const std::string& epuck_ip) {
+    initSocketOpening(robot().ip); // ouverture de la socket d'initialisation
     int Send;
     char CommandeInit[2];
     /* Mise en place de la commande d'init */
@@ -215,7 +213,7 @@ void EPuckV1Driver::InitCamera(const std::string& epuck_ip) {
     } else if (Send == 0) {
         std::cout << "Envoi vide \n";
     }
-    CloseSocket(sock_init); // fermeture de la socket d'initialisation
+    closeSocket(sock_init); // fermeture de la socket d'initialisation
     // HERE (by robin) waiting a little time to avoid synchronizatipon problem
     // with server (socket to receive commands not created yet)
     std::cout << "waiting server to be ready...\n";
@@ -223,7 +221,7 @@ void EPuckV1Driver::InitCamera(const std::string& epuck_ip) {
 }
 
 // Functions for opening sockets
-void EPuckV1Driver::InitSocketOpening(const std::string& epuck_ip) {
+void EPuckV1Driver::initSocketOpening(const std::string& epuck_ip) {
     std::cout << "Creating socket Init :\n\r";
     static const int PortsockInit = 1029;
     sock_init = socket(AF_INET, SOCK_DGRAM, 0);
@@ -255,7 +253,7 @@ void EPuckV1Driver::InitSocketOpening(const std::string& epuck_ip) {
     }
 }
 
-void EPuckV1Driver::OpenCameraSocket() {
+void EPuckV1Driver::openCameraSocket() {
     std::cout << "Creation Camera socket :\n\r";
     camera_socket = socket(AF_INET, SOCK_DGRAM, 0);
     static const int PortsockCamera = 1026;
@@ -278,7 +276,7 @@ void EPuckV1Driver::OpenCameraSocket() {
         }
     }
 }
-void EPuckV1Driver::OpenSensorReceivingSocket() {
+void EPuckV1Driver::openSensorReceivingSocket() {
     std::cout << "Creation socket ReceptionCapteurs :\n\r";
     static const int PortsockReceptionCapteurs = 1028;
     sensor_receiving_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -313,7 +311,7 @@ inline int sign(float val) {
 
 
 /* Socket EnvoieCommandes */
-void EPuckV1Driver::OpenCommandSendingSocket(const std::string& epuck_ip) {
+void EPuckV1Driver::openCommandSendingSocket(const std::string& epuck_ip) {
     std::cout << "Creation socket EnvoieCommandes :\n\r";
     static const int PortsockEnvoieCommandes = 1027;
     command_sending_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -345,11 +343,11 @@ void EPuckV1Driver::OpenCommandSendingSocket(const std::string& epuck_ip) {
     }
 }
 /**** Fonction de fermeture de socket ****/
-void EPuckV1Driver::CloseSocket(int NOM_SOCKET) {
+void EPuckV1Driver::closeSocket(int NOM_SOCKET) {
     shutdown(NOM_SOCKET, 2); // Ferme la session d'emmission et d'�coute
     close(NOM_SOCKET);       // Ferme la socket
 }
-void EPuckV1Driver::SendMotorAndLEDCommandToRobot(const char MotorCmd[15]) {
+void EPuckV1Driver::sendMotorAndLEDCommandToRobot(const char MotorCmd[15]) {
     char MotorAndLEDCommand[23], LEDCommand[9];
     // prepare LED commands
     char Led_1, Led_2, Led_3, Led_4, Led_5, Led_6, Led_7, Led_8;
@@ -375,7 +373,7 @@ void EPuckV1Driver::SendMotorAndLEDCommandToRobot(const char MotorCmd[15]) {
         std::cout << "Error nothing sent\n";
     }
 }
-void EPuckV1Driver::ReceiveSensorMeasures() {
+void EPuckV1Driver::receiveSensorMeasures() {
     int BytesReception;
     socklen_t Size = sizeof(sockaddrin_reception_capteurs);
     memset(all_sensors, 0, 100);
@@ -405,7 +403,7 @@ void EPuckV1Driver::ReceiveSensorMeasures() {
         std::cout << "TIMEOUT Sensor data reading\n";
     }
 }
-void EPuckV1Driver::SplitSensorMeasures() {
+void EPuckV1Driver::splitSensorMeasures() {
     if (all_sensors[0] == 0) {
         std::cout << "nothing received, no message to manage\n";
         return;
@@ -520,7 +518,7 @@ void EPuckV1Driver::SplitSensorMeasures() {
 /**** Threads ****/
 /*****************/
 /**** Thread for receiving camera data ****/
-void* EPuckV1Driver::CameraReceptionThread(void* arg) {
+void* EPuckV1Driver::cameraReceptionThread(void* arg) {
     std::cout << "Executing thread for receiving camera data\n\r";
     static const int img_msg_size = 57600;
     static const int img_msg_header = 8;
@@ -585,7 +583,7 @@ void* EPuckV1Driver::CameraReceptionThread(void* arg) {
     pthread_exit(NULL);
 }
 // SPECIFIC FUNCTIONS
-void EPuckV1Driver::SaveData(Logger& log) {
+void EPuckV1Driver::saveData(Logger& log) {
 
     log.addIn(log.file_eg, encoder_left);
     log.addIn(log.file_ed, encoder_right);
@@ -603,7 +601,7 @@ void EPuckV1Driver::SaveData(Logger& log) {
 }
 
 /**** Send commands to the wheel motors for 10 seconds****/
-void EPuckV1Driver::SetWheelCommands(struct timeval startTime, const int& speedLeft, const int& speedRight, char MotorCmd[15]) {
+void EPuckV1Driver::setWheelCommands(struct timeval startTime, const int& speedLeft, const int& speedRight, char MotorCmd[15]) {
     struct timeval curTime;
     gettimeofday(&curTime, NULL);
     long int timeSinceStart =
@@ -619,7 +617,7 @@ void EPuckV1Driver::SetWheelCommands(struct timeval startTime, const int& speedL
     }
 }
 
-void EPuckV1Driver::IncorrectArguments(const int& argc) {
+void EPuckV1Driver::incorrectArguments(const int& argc) {
     std::cout << "There are "<< argc -1 << " arguments instead of 2 or 4\n";
     std::cout <<
         "The first argument should be one of the "
