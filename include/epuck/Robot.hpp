@@ -41,25 +41,7 @@ public:
     double desired_velocity, current_velocity;
     cv::Mat vision_sensors;
     RobotParameters parameters;
-    /*** ADDITIONNAL DATA FOR EPUCK V2 */
 
-    // Sensors data variables
-
-    float acceleration, orientation, inclination;		/**< acceleration data*/
-
-    int16_t gyro_raw[3];
-    float magnetic_field[3];
-    uint8_t temperature;
-    int light_avg;										/**< light sensor data*/
-    
-    uint16_t distance_cm;
-    uint16_t mic_volume[4];								/**< microphone data*/
-    uint16_t battery_raw;
-    uint8_t micro_sd_state;
-    uint8_t ir_check, ir_address, ir_data;
-    uint8_t selector;
-    int16_t ground_prox[3], ground_ambient[3];
-    uint8_t button_state;
 };
 // current_pose.th [-pi/2;pi/2]
 // wheels_state.*_position [-pi, pi]

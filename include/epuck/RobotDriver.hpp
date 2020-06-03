@@ -39,18 +39,22 @@
 
 class RobotDriver {
 public:
-    RobotDriver(Robot& robot) : robot_(robot) {
+    RobotDriver(Robot& robot, char** arg) : robot_(robot), argv(arg) {
     }
     virtual ~RobotDriver() = default;
 
-    virtual bool Init() = 0;
-    virtual void Read() = 0;
-    virtual void Send() = 0;
+    virtual bool init() = 0;
+    virtual void read() = 0;
+    virtual void sendCmd() = 0;
     virtual void getVisionSensor(Robot& robot) = 0;
-    cv::Mat ShowAndSaveRobotImage(unsigned char* imgData, const int& cnt_it);
+    cv::Mat showAndSaveRobotImage(unsigned char* imgData, const int& cnt_it);
 
     Robot& robot();
     Logger& log();
+
+protected:
+    int cnt_iter;
+    char** argv;
 
 private:
     Robot& robot_;
@@ -59,32 +63,28 @@ private:
 
 class EPuckV1Driver : public RobotDriver {
 public:
-    EPuckV1Driver(Robot& robot, char** argv, bool& sig);
+    EPuckV1Driver(Robot& robot, char** arg);
     virtual ~EPuckV1Driver();
 
-    bool Init() override;
-    void Read() override;
-    void Send() override;
+    bool init() override;
+    void read() override;
+    void sendCmd() override;
     void getVisionSensor(Robot& robot) override ; // Empty (not needed in EPuckV1Driver)
-    void InitCamera(const std::string& epuck_ip);
-    void InitSocketOpening(const std::string& epuck_ip);
-    void OpenCameraSocket();
-    void OpenSensorReceivingSocket();
-    void SetWheelCommands(struct timeval startTime, const int& speed_L, const int& speed_R, char MotorCmd[15]);
-    void SaveData(Logger& log);
-    void* CameraReceptionThread(void* arg);
-    void SplitSensorMeasures();
-    void ReceiveSensorMeasures();
-    void SendMotorAndLEDCommandToRobot(const char MotorCmd[15]);
-    void CloseSocket(int NOM_SOCKET);
-    void OpenCommandSendingSocket(const std::string& epuck_ip);
-    void IncorrectArguments(const int& argc);
-    //void* MainThread(void* param);
-    //void sigint_handler(int signal);
 
-    int cnt_iter;
-
-
+private:
+    void initCamera(const std::string& epuck_ip);
+    void initSocketOpening(const std::string& epuck_ip);
+    void openCameraSocket();
+    void openSensorReceivingSocket();
+    void setWheelCommands(struct timeval startTime, const int& speed_L, const int& speed_R, char MotorCmd[15]);
+    void saveData(Logger& log);
+    void* cameraReceptionThread(void* arg);
+    void splitSensorMeasures();
+    void receiveSensorMeasures();
+    void sendMotorAndLEDCommandToRobot(const char MotorCmd[15]);
+    void closeSocket(int NOM_SOCKET);
+    void openCommandSendingSocket(const std::string& epuck_ip);
+    void incorrectArguments(const int& argc);
 
     /* Variables of main thread */
 
@@ -124,44 +124,37 @@ public:
         unsigned char msg[230400];
     } img_data;
 
-    char** argv_;
+    pthread_t IDCameraReceptionThread; 
 
-    pthread_t IDCameraReceptionThread; //, IDMainThread;
-    /*
-    static void *MThread(void * p1_) {
-        EPuckV1Driver *a = (EPuckV1Driver *)p1_; // cast *p to EPuckV1Driver class type
-        a->MainThread(nullptr);                // access EPuckV1Driver's non-static member MainThread()
-        return NULL;                           // do some work and return
-    }
-    */
-    static void *CameraThreadFunc(void * p) {
+    static void *cameraThreadFunc(void * p) {
         EPuckV1Driver *a = (EPuckV1Driver *)p; // cast *p to EPuckV1Driver class type
-        a->CameraReceptionThread(nullptr);     // access EPuckV1Driver's non-static member CameraReceptionThread()
+        a->cameraReceptionThread(nullptr);     // access EPuckV1Driver's non-static member CameraReceptionThread()
         return NULL;                           // do some work and return
     }
 };
 
 class EPuckV2Driver : public RobotDriver {
 public:
-    EPuckV2Driver(Robot& robot);
+    EPuckV2Driver(Robot& robot, char** arg);
     virtual ~EPuckV2Driver();
 
-    bool Init() override;
-    void Read() override;
-    void Send() override;
+    bool init() override;
+    void read() override;
+    void sendCmd() override;
     
     void getVisionSensor(Robot& robot) override ;
-    void PrintSensors();
+    
+    
+
+
+private:
+    void printSensors();
     void closeConnection();
     void proxDataRawValuesToMeters();
     void positionDataCorrection();
     void odometry();
 
-
-private:
-
     unsigned char image_[160*120*2];
-    int ajouter_;
 
     // Communication variables
     struct sockaddr_in robot_addr_;
@@ -187,25 +180,46 @@ private:
     int overflow_count_left_, overflow_count_right_ ;
     int16_t gyro_offset_[3] ; // Used if making an initial calibration of the gyro.
 
+        /*** ADDITIONNAL DATA FOR EPUCK V2 */
+
+    // Sensors data variables
+
+    float acceleration, orientation, inclination;/**< acceleration data*/
+
+    int16_t gyro_raw[3];
+    float magnetic_field[3];
+    uint8_t temperature;
+    int light_avg;		/**< light sensor data*/
+    
+    uint16_t distance_cm;
+    uint16_t mic_volume[4];	/**< microphone data*/
+    uint16_t battery_raw;
+    uint8_t micro_sd_state;
+    uint8_t ir_check, ir_address, ir_data;
+    uint8_t selector;
+    int16_t ground_prox[3], ground_ambient[3];
+    uint8_t button_state;
 
 };
 
 class EPuckVREPDriver : public RobotDriver {
 public:
-    EPuckVREPDriver(Robot& robot);
+    EPuckVREPDriver(Robot& robot, char** arg);
     virtual ~EPuckVREPDriver();
 
-    bool Init() override;
-    void Read() override;
-    void Send() override;
+    bool init() override;
+    void read() override;
+    void sendCmd() override;
     void getVisionSensor(Robot& robot) override ;
 
     void setVelocity(double, double);
-    void PrintSensors();
-    void dataToRobot();
 
 
 private:
+
+    void printSensors();
+    void dataToRobot();
+    
     int client_id_, ping_time_;
     int epuck_handle_;
     int right_joint_handle_, left_joint_handle_;
