@@ -40,7 +40,7 @@ Pour lancer l'application taper :
 ```sh
 	$ # lancer la simulation
 	$ ./apps/robot setWheelCmd 127.0.0.1 5 -5 
-	$ # Command pour un robot
+	$ # pour un robot
     $ ./apps/robot setWheelCmd 192.168.1.8 50 -50  
 ```
 
