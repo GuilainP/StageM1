@@ -38,7 +38,8 @@ public:
     Wheels wheels_state, wheels_command;
     Proximity_sensors proximity_sensors;
     Pose desired_pose, current_pose;
-    double desired_velocity, current_velocity;
+    double desired_velocity, current_velocity; // v
+    double desired_angle, current_angle; // w
     cv::Mat vision_sensors;
     RobotParameters parameters;
 

@@ -26,25 +26,25 @@
 #define HERE(X) std::cout << "HI THERE " << X <<  std::endl
 
 EPuckV1Driver::EPuckV1Driver(Robot& robot, char** arg) : RobotDriver(robot, arg) {
-    stop_threads = false;
-    camera_active = true;
+    stop_threads_ = false;
+    camera_active_ = true;
 }
 
 EPuckV1Driver::~EPuckV1Driver() {
-    stop_threads = true;
+    stop_threads_ = true;
     // Send a zero velocity command before exiting
-    setWheelCommands(startTime, 0, 0, MotorCommand);
-    sendMotorAndLEDCommandToRobot(MotorCommand);
+    setWheelCommands(startTime, 0, 0, MotorCommand_);
+    sendMotorAndLEDCommandToRobot(MotorCommand_);
     std::cout << "All good, mate\n";
 
-    pthread_join(IDCameraReceptionThread, NULL);
+    pthread_join(id_camera_reception_thread_, NULL);
 
     //signal(SIGINT, nullptr);
 
-    closeSocket(camera_socket);
+    closeSocket(camera_socket_);
 
-    closeSocket(command_sending_socket);
-    closeSocket(sensor_receiving_socket);
+    closeSocket(command_sending_socket_);
+    closeSocket(sensor_receiving_socket_);
 }
 
 bool EPuckV1Driver::init() {
@@ -55,7 +55,7 @@ bool EPuckV1Driver::init() {
 
     openCameraSocket();
 
-    if (pthread_create(&IDCameraReceptionThread, NULL, cameraThreadFunc, this) == -1) {
+    if (pthread_create(&id_camera_reception_thread_, NULL, cameraThreadFunc, this) == -1) {
         printf("Error while creating the camera reception thread!\n");
         return false;
     } else {
@@ -75,24 +75,27 @@ bool EPuckV1Driver::init() {
             incorrectArguments(argc);
         } else {
             c = setWheelCmd;
-            speedLeft = std::stol(argv[3]);
-            speedRight = std::stol(argv[4]);
+            robot().wheels_command.left_velocity = std::stol(argv[3]);
+            robot().wheels_command.right_velocity  = std::stol(argv[4]);
         }
     } else if (cont == "setVel") {
         if (argc != 5) {
             incorrectArguments(argc);
         } else {
             c = setVel;
-            vel = std::stol(argv[3]);
-            omega = std::stod(argv[4]);
+            // vel --> robot().desired_velocity
+            // omega --> robot().desired_angle
+            robot().desired_velocity = std::stol(argv[3]);
+            robot().desired_angle = std::stod(argv[4]);
         }
-    } else if (cont == "setRobVel") {
+    } 
+/*    else if (cont == "setRobVel") {
         if (argc != 5) {
             incorrectArguments(argc);
         } else {
             c = setRobVel;
-            vel = std::stod(argv[3]);
-            omega = std::stod(argv[4]);
+            robot().desired_velocity = std::stod(argv[3]);
+            robot().desired_angle = std::stod(argv[4]);
         }
     } else if (cont == "followWall") {
         if (argc != 3)
@@ -107,24 +110,26 @@ bool EPuckV1Driver::init() {
     } else {
         incorrectArguments(argc);
     }
+*/
     std::cout << "Controller is "<< argv[1] << "\n";
+
     cnt_iter = 1; // to get the current iteration
     gettimeofday(&startTime, NULL); // get starting time
-    initPose.setPose(.32, 0., M_PI);
+    init_pose_.setPose(.32, 0., M_PI);
 
     return true;
 }
 
 // TODO
 void EPuckV1Driver::read() {
-    //robot().vision_sensors = showAndSaveRobotImage(img_data.msg, cnt_iter); 
+    //robot().vision_sensors = showAndSaveRobotImage(img_data_.msg, cnt_iter); 
     std::cout << "\033[1;36m";//write in bold cyan
     std::cout << "\nSTART ITERATION " << cnt_iter <<" \n";
     std::cout << "\033[0m";//reset color
     gettimeofday(&prevTime, NULL);
     //show and save image
-    if (camera_active == true) {
-        robImg = showAndSaveRobotImage(img_data.msg, cnt_iter);
+    if (camera_active_ == true) {
+        robImg_ = showAndSaveRobotImage(img_data_.msg, cnt_iter);
     }
     gettimeofday(&curTime, NULL);
     timeSinceStart = (curTime.tv_sec - prevTime.tv_sec) * 1e3 + (curTime.tv_usec - prevTime.tv_usec) * 1e-3;
@@ -134,48 +139,49 @@ void EPuckV1Driver::read() {
 
 
     if(cnt_iter == 1) {
-        curPoseFromEnc = initPose;
-        curPoseFromVis = initPose;
+        cur_pose_from_enc_ = init_pose_;
+        cur_pose_from_vis_ = init_pose_;
     } else {
-        curPoseFromEnc = GetCurrPoseFromEncoders(robot().parameters, prevPoseFromEnc, encoder_left, encoder_right, prev_encoder_left, prev_encoder_right, log());
+        cur_pose_from_enc_ = GetCurrPoseFromEncoders(robot().parameters, prev_pose_from_enc_, encoder_left_, encoder_right_, prev_encoder_left_, prev_encoder_right_, log());
     }
     float areaPix;
     cv::Point baryc = cv::Point(0.0,0.0); // ProcessImageToGetBarycenter(robImg , areaPix);
-    curPoseFromVis = GetCurrPoseFromVision(baryc, curPoseFromEnc.th, areaPix, log());
-    prevPoseFromEnc = curPoseFromEnc;
-    prevPoseFromVis = curPoseFromVis;
+    cur_pose_from_vis_ = GetCurrPoseFromVision(baryc, cur_pose_from_enc_.th, areaPix, log());
+    prev_pose_from_enc_ = cur_pose_from_enc_;
+    prev_pose_from_vis_ = cur_pose_from_vis_;
 
     receiveSensorMeasures(); // receive data from encoders and proximity sensors///////////////////////////////////////////////////////////////////////////////////////////////////////////
     splitSensorMeasures(); // splits measures and converts them to integer///////////////////////////////////////////////////////////////////////////////////////////////////////////
     float dist[10];
-    InfraRedValuesToMetricDistance(robot().parameters, prox_sensors, dist, log());
+    InfraRedValuesToMetricDistance(robot().parameters, prox_sensors_, dist, log());
     cv::Point2f ProxInWFrame[10];
     float mRob, pRob, mWorld, pWorld;
-    ConvertIRPointsForWallFollowing(robot().parameters, dist, curPoseFromEnc, ProxInWFrame, mRob, pRob, mWorld, pWorld);
-    DrawMapWithRobot(robot().parameters, curPoseFromEnc, curPoseFromVis, ProxInWFrame, mWorld, pWorld);
+    ConvertIRPointsForWallFollowing(robot().parameters, dist, cur_pose_from_enc_, ProxInWFrame, mRob, pRob, mWorld, pWorld);
+    DrawMapWithRobot(robot().parameters, cur_pose_from_enc_, cur_pose_from_vis_, ProxInWFrame, mWorld, pWorld);
 
     //control robot
     if (c == setWheelCmd) {
-        setWheelCommands(startTime, speedLeft, speedRight, MotorCommand); // send commmands to wheels
+        setWheelCommands(startTime, robot().wheels_command.left_velocity, robot().wheels_command.right_velocity, MotorCommand_); // send commmands to wheels
     } else if (c == setVel) {
-        SetVelocities(startTime, vel, omega, MotorCommand); // send operational velocities to robot to be done by students
-    } else if (c == setRobVel) {
-        SetRobotVelocities(robot().parameters, startTime, vel, omega, MotorCommand); // send operational velocities to robot
+        SetVelocities(startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot to be done by students
+    } 
+/*  else if (c == setRobVel) {
+        SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
     } else if (c == followWall) {
-        ControlRobotToFollowWall(startTime, vel, omega); // make robot follow a wall using infrared measurements
-        SetRobotVelocities(robot().parameters, startTime, vel, omega, MotorCommand); // send operational velocities to robot
+        ControlRobotToFollowWall(startTime, (float)robot().desired_velocity, (float)robot().desired_angle); // make robot follow a wall using infrared measurements
+        SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
     } else if (c == visServo) {
-        ControlRobotWithVisualServoing(baryc, vel, omega); // control robot using images from the camera
-        SetRobotVelocities(robot().parameters, startTime, vel, omega, MotorCommand); // send operational velocities to robot
+        ControlRobotWithVisualServoing(baryc, (float)robot().desired_velocity, (float)robot().desired_angle); // control robot using images from the camera
+        SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
     }
-
+*/
     saveData(log());
 
 };
 
 
 void EPuckV1Driver::sendCmd() {
-    sendMotorAndLEDCommandToRobot(MotorCommand);
+    sendMotorAndLEDCommandToRobot(MotorCommand_);
 
     cnt_iter++;
 
@@ -198,22 +204,22 @@ void EPuckV1Driver::initCamera(const std::string& epuck_ip) {
     int Send;
     char CommandeInit[2];
     /* Mise en place de la commande d'init */
-    if (camera_active == true) {
+    if (camera_active_ == true) {
         sprintf(CommandeInit, "1");
     }
-    if (camera_active == false) {
+    if (camera_active_ == false) {
         sprintf(CommandeInit, "0");
     }
     std::cout << "commande Init = %s\n", CommandeInit;
     /* Envoi commande d'init */
-    Send = sendto(sock_init, CommandeInit, sizeof(CommandeInit), 0,
-                  (struct sockaddr*)&sockaddrin_init, sizeof(sockaddrin_init));
+    Send = sendto(sock_init_, CommandeInit, sizeof(CommandeInit), 0,
+                  (struct sockaddr*)&sockaddrin_init_, sizeof(sockaddrin_init_));
     if (Send < 0) {
         std::cout << "erreur sur l'envoi de l'Init\n";
     } else if (Send == 0) {
         std::cout << "Envoi vide \n";
     }
-    closeSocket(sock_init); // fermeture de la socket d'initialisation
+    closeSocket(sock_init_); // fermeture de la socket d'initialisation
     // HERE (by robin) waiting a little time to avoid synchronizatipon problem
     // with server (socket to receive commands not created yet)
     std::cout << "waiting server to be ready...\n";
@@ -224,26 +230,26 @@ void EPuckV1Driver::initCamera(const std::string& epuck_ip) {
 void EPuckV1Driver::initSocketOpening(const std::string& epuck_ip) {
     std::cout << "Creating socket Init :\n\r";
     static const int PortsockInit = 1029;
-    sock_init = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock_init == INVALID_SOCKET) {
+    sock_init_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock_init_ == INVALID_SOCKET) {
         std::cout << "Desole, je ne peux pas creer la socket port: " << PortsockInit << "\n";
     } else {
         std::cout << "socket port " << PortsockInit << " : OK \n";
         /* Lie la socket � une ip et un port d'�coute */
         // callee (epuck) -> distant socket where I need to send to epuck
-        sockaddrin_init.sin_family = AF_INET;
-        sockaddrin_init.sin_addr.s_addr =
+        sockaddrin_init_.sin_family = AF_INET;
+        sockaddrin_init_.sin_addr.s_addr =
             inet_addr(epuck_ip.c_str()); // IP de l'epuck
-        sockaddrin_init.sin_port =
+        sockaddrin_init_.sin_port =
             htons(PortsockInit); // Ecoute ou emet sur le PORT
         // caller (local PC)
-        local_sockaddrin_init.sin_family = AF_INET;
-        local_sockaddrin_init.sin_addr.s_addr =
+        local_sockaddrin_init_.sin_family = AF_INET;
+        local_sockaddrin_init_.sin_addr.s_addr =
             htonl(INADDR_ANY); // IP de l'epuck
-        local_sockaddrin_init.sin_port =
+        local_sockaddrin_init_.sin_port =
             htons(PortsockInit); // Ecoute ou emet sur le PORT
-        int erreur = bind(sock_init, (SOCKADDR*)&local_sockaddrin_init,
-                          sizeof(local_sockaddrin_init));
+        int erreur = bind(sock_init_, (SOCKADDR*)&local_sockaddrin_init_,
+                          sizeof(local_sockaddrin_init_));
         if (erreur == SOCKET_ERROR) {
             perror("ERROR Sock INIT :");
             std::cout << "Echec du Bind de la socket port : " << PortsockInit <<" \n";
@@ -255,20 +261,20 @@ void EPuckV1Driver::initSocketOpening(const std::string& epuck_ip) {
 
 void EPuckV1Driver::openCameraSocket() {
     std::cout << "Creation Camera socket :\n\r";
-    camera_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    camera_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
     static const int PortsockCamera = 1026;
 
-    if (camera_socket == INVALID_SOCKET) {
+    if (camera_socket_ == INVALID_SOCKET) {
         std::cout << "Desole, je ne peux pas creer la socket port: "<< PortsockCamera << " \n";
     } else {
         std::cout << "socket port " << PortsockCamera << " : OK \n";
         /* Lie la socket � une ip et un port d'�coute */
-        sockaddrin_camera.sin_family = AF_INET;
-        sockaddrin_camera.sin_addr.s_addr = htonl(INADDR_ANY); // IP
-        sockaddrin_camera.sin_port =
+        sockaddrin_camera_.sin_family = AF_INET;
+        sockaddrin_camera_.sin_addr.s_addr = htonl(INADDR_ANY); // IP
+        sockaddrin_camera_.sin_port =
             htons(PortsockCamera); // Ecoute ou emet sur le PORT
-        int erreur = bind(camera_socket, (SOCKADDR*)&sockaddrin_camera,
-                          sizeof(sockaddrin_camera));
+        int erreur = bind(camera_socket_, (SOCKADDR*)&sockaddrin_camera_,
+                          sizeof(sockaddrin_camera_));
         if (erreur == SOCKET_ERROR) {
             std::cout << "Echec du Bind de la socket port : " << PortsockCamera << " \n";
         } else {
@@ -279,19 +285,19 @@ void EPuckV1Driver::openCameraSocket() {
 void EPuckV1Driver::openSensorReceivingSocket() {
     std::cout << "Creation socket ReceptionCapteurs :\n\r";
     static const int PortsockReceptionCapteurs = 1028;
-    sensor_receiving_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sensor_receiving_socket == INVALID_SOCKET) {
+    sensor_receiving_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sensor_receiving_socket_ == INVALID_SOCKET) {
         std::cout << "Desole, je ne peux pas creer la socket port: " << PortsockReceptionCapteurs << " \n";
     } else {
         std::cout << "socket port %d : " << PortsockReceptionCapteurs <<" \n";
         /* Lie la socket � une ip et un port d'�coute*/
-        sockaddrin_reception_capteurs.sin_family = AF_INET;
-        sockaddrin_reception_capteurs.sin_addr.s_addr = htonl(INADDR_ANY); // IP
-        sockaddrin_reception_capteurs.sin_port =
+        sockaddrin_reception_capteurs_.sin_family = AF_INET;
+        sockaddrin_reception_capteurs_.sin_addr.s_addr = htonl(INADDR_ANY); // IP
+        sockaddrin_reception_capteurs_.sin_port =
             htons(PortsockReceptionCapteurs); // Ecoute ou emet sur le PORT
         int erreur =
-            bind(sensor_receiving_socket, (SOCKADDR*)&sockaddrin_reception_capteurs,
-                 sizeof(sockaddrin_reception_capteurs));
+            bind(sensor_receiving_socket_, (SOCKADDR*)&sockaddrin_reception_capteurs_,
+                 sizeof(sockaddrin_reception_capteurs_));
         if (erreur == SOCKET_ERROR) {
             std::cout << "Echec du Bind de la socket port : "<< PortsockReceptionCapteurs << " \n";
         } else {
@@ -314,27 +320,27 @@ inline int sign(float val) {
 void EPuckV1Driver::openCommandSendingSocket(const std::string& epuck_ip) {
     std::cout << "Creation socket EnvoieCommandes :\n\r";
     static const int PortsockEnvoieCommandes = 1027;
-    command_sending_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (command_sending_socket == INVALID_SOCKET) {
+    command_sending_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (command_sending_socket_ == INVALID_SOCKET) {
         std::cout << "Desole, je ne peux pas creer la socket port: " << PortsockEnvoieCommandes << " \n";
     } else {
         std::cout << "socket port " << PortsockEnvoieCommandes << " : OK \n";
         /* Lie la socket � une ip et un port d'�coute */
         // callee (epuck) -> distant socket where I need to send to epuck
-        sockaddrin_envoie_commandes.sin_family = AF_INET;
-        sockaddrin_envoie_commandes.sin_addr.s_addr =
+        sockaddrin_envoie_commandes_.sin_family = AF_INET;
+        sockaddrin_envoie_commandes_.sin_addr.s_addr =
             inet_addr(epuck_ip.c_str()); // IP
-        sockaddrin_envoie_commandes.sin_port =
+        sockaddrin_envoie_commandes_.sin_port =
             htons(PortsockEnvoieCommandes); // Ecoute ou emet sur le PORT
         // caller (local PC)
-        local_sockaddrin_envoie_commandes.sin_family = AF_INET;
-        local_sockaddrin_envoie_commandes.sin_addr.s_addr =
+        local_sockaddrin_envoie_commandes_.sin_family = AF_INET;
+        local_sockaddrin_envoie_commandes_.sin_addr.s_addr =
             htonl(INADDR_ANY); // IP de l'epuck
-        local_sockaddrin_envoie_commandes.sin_port =
+        local_sockaddrin_envoie_commandes_.sin_port =
             htons(PortsockEnvoieCommandes); // Ecoute ou emet sur le PORT
-        int erreur = bind(command_sending_socket,
-                          (SOCKADDR*)&local_sockaddrin_envoie_commandes,
-                          sizeof(local_sockaddrin_envoie_commandes));
+        int erreur = bind(command_sending_socket_,
+                          (SOCKADDR*)&local_sockaddrin_envoie_commandes_,
+                          sizeof(local_sockaddrin_envoie_commandes_));
         if (erreur == SOCKET_ERROR) {
             std::cout << "Echec du Bind de la socket port : " << PortsockEnvoieCommandes << " \n";
         } else {
@@ -364,9 +370,9 @@ void EPuckV1Driver::sendMotorAndLEDCommandToRobot(const char MotorCmd[15]) {
     sprintf(MotorAndLEDCommand, "%s%s", LEDCommand, MotorCmd);
     std::cout << "Command to be sent: " << MotorAndLEDCommand <<"\n";
     int Send_;
-    Send_ = sendto(command_sending_socket, MotorAndLEDCommand, 23, 0,
-                  (struct sockaddr*)&sockaddrin_envoie_commandes,
-                  sizeof(sockaddrin_envoie_commandes));
+    Send_ = sendto(command_sending_socket_, MotorAndLEDCommand, 23, 0,
+                  (struct sockaddr*)&sockaddrin_envoie_commandes_,
+                  sizeof(sockaddrin_envoie_commandes_));
     if (Send_ < 0) {
         std::cout << "Error sending commands\n";
     } else if (Send_ == 0) {
@@ -375,8 +381,8 @@ void EPuckV1Driver::sendMotorAndLEDCommandToRobot(const char MotorCmd[15]) {
 }
 void EPuckV1Driver::receiveSensorMeasures() {
     int BytesReception;
-    socklen_t Size = sizeof(sockaddrin_reception_capteurs);
-    memset(all_sensors, 0, 100);
+    socklen_t Size = sizeof(sockaddrin_reception_capteurs_);
+    memset(all_sensors_, 0, 100);
 
     struct timeval timeout;
     timeout.tv_sec = 1;
@@ -384,16 +390,16 @@ void EPuckV1Driver::receiveSensorMeasures() {
     
     fd_set socks;
     FD_ZERO(&socks);
-    FD_SET(sensor_receiving_socket, &socks);
-    if (select(sensor_receiving_socket + 1, &socks, NULL, NULL, &timeout)) {
+    FD_SET(sensor_receiving_socket_, &socks);
+    if (select(sensor_receiving_socket_ + 1, &socks, NULL, NULL, &timeout)) {
         BytesReception =
-            recvfrom(sensor_receiving_socket, all_sensors, 100, 0,
-                     (SOCKADDR*)&sockaddrin_reception_capteurs, &Size);
+            recvfrom(sensor_receiving_socket_, all_sensors_, 100, 0,
+                     (SOCKADDR*)&sockaddrin_reception_capteurs_, &Size);
         if (BytesReception < 0) {
-            all_sensors[0] = 0;
+            all_sensors_[0] = 0;
             std::cout << "SORRY No Data received\n";
         } else {
-            all_sensors[BytesReception] = 0;
+            all_sensors_[BytesReception] = 0;
             if (BytesReception > 0) {
             } else {
                 std::cout << "WARNING No Data received!\n";
@@ -404,7 +410,7 @@ void EPuckV1Driver::receiveSensorMeasures() {
     }
 }
 void EPuckV1Driver::splitSensorMeasures() {
-    if (all_sensors[0] == 0) {
+    if (all_sensors_[0] == 0) {
         std::cout << "nothing received, no message to manage\n";
         return;
     }
@@ -425,10 +431,10 @@ void EPuckV1Driver::splitSensorMeasures() {
     /* Decoupage progressif des valeurs des capteurs */
     bufferto = (char*)calloc(72, sizeof(char));
 
-    ptr_pos = strstr(all_sensors, "q"); // on cherche l'index o� se trouve q
-    ptr_pos ? index = ptr_pos - all_sensors + 2 : index = 0;
+    ptr_pos = strstr(all_sensors_, "q"); // on cherche l'index o� se trouve q
+    ptr_pos ? index = ptr_pos - all_sensors_ + 2 : index = 0;
 
-    memcpy(bufferto, &all_sensors[index], SizeBufferto = 72);
+    memcpy(bufferto, &all_sensors_[index], SizeBufferto = 72);
     ptr_pos =
         strstr(bufferto,
                ","); // on cherche l'index o� se trouve la premi�re virgule
@@ -437,81 +443,81 @@ void EPuckV1Driver::splitSensorMeasures() {
            index); // on copie depuis le d�but du Buffer sur une longueur
                    // correspondant � l'index cherch� pr�c�demment
 
-    memcpy(all_sensors, &bufferto[index + 1],
+    memcpy(all_sensors_, &bufferto[index + 1],
            SizeCapteurs =
                72 - (index + 1)); // on "enleve" la partie d�j� trait�e
-    ptr_pos = strstr(all_sensors, "n");
-    ptr_pos ? index = ptr_pos - all_sensors : index = 0;
-    memcpy(CharEncodeur[1], all_sensors, index);
+    ptr_pos = strstr(all_sensors_, "n");
+    ptr_pos ? index = ptr_pos - all_sensors_ : index = 0;
+    memcpy(CharEncodeur[1], all_sensors_, index);
 
-    memcpy(bufferto, &all_sensors[index + 2],
+    memcpy(bufferto, &all_sensors_[index + 2],
            SizeBufferto = SizeCapteurs - (index + 2));
     ptr_pos = strstr(bufferto, ",");
     ptr_pos ? index = ptr_pos - bufferto : index = 0;
     memcpy(CharProx[0], bufferto, index);
 
-    memcpy(all_sensors, &bufferto[index + 1],
+    memcpy(all_sensors_, &bufferto[index + 1],
            SizeCapteurs = SizeBufferto - (index + 1));
-    ptr_pos = strstr(all_sensors, ",");
-    ptr_pos ? index = ptr_pos - all_sensors : index = 0;
-    memcpy(CharProx[1], all_sensors, index);
+    ptr_pos = strstr(all_sensors_, ",");
+    ptr_pos ? index = ptr_pos - all_sensors_ : index = 0;
+    memcpy(CharProx[1], all_sensors_, index);
 
-    memcpy(bufferto, &all_sensors[index + 1],
+    memcpy(bufferto, &all_sensors_[index + 1],
            SizeBufferto = SizeCapteurs - (index + 1));
     ptr_pos = strstr(bufferto, ",");
     ptr_pos ? index = ptr_pos - bufferto : index = 0;
     memcpy(CharProx[2], bufferto, index);
 
-    memcpy(all_sensors, &bufferto[index + 1],
+    memcpy(all_sensors_, &bufferto[index + 1],
            SizeCapteurs = SizeBufferto - (index + 1));
-    ptr_pos = strstr(all_sensors, ",");
-    ptr_pos ? index = ptr_pos - all_sensors : index = 0;
-    memcpy(CharProx[3], all_sensors, index);
+    ptr_pos = strstr(all_sensors_, ",");
+    ptr_pos ? index = ptr_pos - all_sensors_ : index = 0;
+    memcpy(CharProx[3], all_sensors_, index);
 
-    memcpy(bufferto, &all_sensors[index + 1],
+    memcpy(bufferto, &all_sensors_[index + 1],
            SizeBufferto = SizeCapteurs - (index + 1));
     ptr_pos = strstr(bufferto, ",");
     ptr_pos ? index = ptr_pos - bufferto : index = 0;
     memcpy(CharProx[4], bufferto, index);
 
-    memcpy(all_sensors, &bufferto[index + 1],
+    memcpy(all_sensors_, &bufferto[index + 1],
            SizeCapteurs = SizeBufferto - (index + 1));
-    ptr_pos = strstr(all_sensors, ",");
-    ptr_pos ? index = ptr_pos - all_sensors : index = 0;
-    memcpy(CharProx[5], all_sensors, index);
+    ptr_pos = strstr(all_sensors_, ",");
+    ptr_pos ? index = ptr_pos - all_sensors_ : index = 0;
+    memcpy(CharProx[5], all_sensors_, index);
 
-    memcpy(bufferto, &all_sensors[index + 1],
+    memcpy(bufferto, &all_sensors_[index + 1],
            SizeBufferto = SizeCapteurs - (index + 1));
     ptr_pos = strstr(bufferto, ",");
     ptr_pos ? index = ptr_pos - bufferto : index = 0;
     memcpy(CharProx[6], bufferto, index);
 
-    memcpy(all_sensors, &bufferto[index + 1],
+    memcpy(all_sensors_, &bufferto[index + 1],
            SizeCapteurs = SizeBufferto - (index + 1));
-    ptr_pos = strstr(all_sensors, ",");
-    ptr_pos ? index = ptr_pos - all_sensors : index = 0;
-    memcpy(CharProx[7], all_sensors, index);
+    ptr_pos = strstr(all_sensors_, ",");
+    ptr_pos ? index = ptr_pos - all_sensors_ : index = 0;
+    memcpy(CharProx[7], all_sensors_, index);
 
-    memcpy(bufferto, &all_sensors[index + 1],
+    memcpy(bufferto, &all_sensors_[index + 1],
            SizeBufferto = SizeCapteurs - (index + 1));
     ptr_pos = strstr(bufferto, ",");
     ptr_pos ? index = ptr_pos - bufferto : index = 0;
     memcpy(CharProx[8], bufferto, index);
 
-    memcpy(all_sensors, &bufferto[index + 1],
+    memcpy(all_sensors_, &bufferto[index + 1],
            SizeCapteurs = SizeBufferto - (index + 1));
-    ptr_pos = strstr(all_sensors, "\r");
-    ptr_pos ? index = ptr_pos - all_sensors : index = 0;
-    memcpy(CharProx[9], all_sensors, index);
+    ptr_pos = strstr(all_sensors_, "\r");
+    ptr_pos ? index = ptr_pos - all_sensors_ : index = 0;
+    memcpy(CharProx[9], all_sensors_, index);
 
     /* conversion des Char en Int */
     for (int i = 0; i < 10; i++) {
-        prox_sensors[i] = atoi(CharProx[i]);
+        prox_sensors_[i] = atoi(CharProx[i]);
     }
-    prev_encoder_left = encoder_left;
-    prev_encoder_right = encoder_right;
-    encoder_left = atoi(CharEncodeur[0]);
-    encoder_right = atoi(CharEncodeur[1]);
+    prev_encoder_left_ = encoder_left_;
+    prev_encoder_right_ = encoder_right_;
+    encoder_left_ = atoi(CharEncodeur[0]);
+    encoder_right_ = atoi(CharEncodeur[1]);
 }
 
 /*****************/
@@ -524,10 +530,10 @@ void* EPuckV1Driver::cameraReceptionThread(void* arg) {
     static const int img_msg_header = 8;
     int num_bytes = -2;
     
-    socklen_t sinsize = sizeof(sockaddrin_camera);
+    socklen_t sinsize = sizeof(sockaddrin_camera_);
     unsigned char* buffer = (unsigned char*)calloc(
         img_msg_size + img_msg_header, sizeof(unsigned char));
-    memset(img_data.msg, 0x0, img_msg_size);
+    memset(img_data_.msg, 0x0, img_msg_size);
     char idImg_buf[2], idBlock_buf[2];
     memset(idImg_buf, 0, 2);
     memset(idBlock_buf, 0, 2);
@@ -540,13 +546,13 @@ void* EPuckV1Driver::cameraReceptionThread(void* arg) {
     timeout.tv_usec = 0;
     fd_set socks;
     FD_ZERO(&socks);
-    FD_SET(camera_socket, &socks);
-    while ( stop_threads == false ) {
+    FD_SET(camera_socket_, &socks);
+    while ( stop_threads_ == false ) {
 		// int ret = select(CameraSocket + 1, &socks, NULL, NULL, &timeout);
         // if (ret > 0) {
-            num_bytes = recvfrom(camera_socket, (char*)buffer,
+            num_bytes = recvfrom(camera_socket_, (char*)buffer,
                                  img_msg_size + img_msg_header, 0,
-                                 (SOCKADDR*)&sockaddrin_camera, &sinsize);
+                                 (SOCKADDR*)&sockaddrin_camera_, &sinsize);
             //std::cout << "received n bytes " << num_bytes << " " << i++ << " times\n";
             if (num_bytes < 0) {
                 if (!GotData) {
@@ -557,13 +563,13 @@ void* EPuckV1Driver::cameraReceptionThread(void* arg) {
                 GotData = false;
                 memcpy(idImg_buf, &buffer[0], 2);
                 // std::cout << "idimg : " << idImg_buf << std::endl;
-                img_data.id_img = atoi(idImg_buf);
+                img_data_.id_img = atoi(idImg_buf);
 				//std::cout << "id_img: " << imgData.id_img << std::endl;
                 memcpy(idBlock_buf, &buffer[3], 1);
                 // std::cout << "idBlock : " << idBlock_buf << std::endl;
-                img_data.id_block = atoi(idBlock_buf);
+                img_data_.id_block = atoi(idBlock_buf);
 				//std::cout << "id_block: " << imgData.id_block << std::endl;
-                memcpy(&img_data.msg[(img_data.id_block) * img_msg_size],
+                memcpy(&img_data_.msg[(img_data_.id_block) * img_msg_size],
                        &buffer[8], img_msg_size);
 				//for(int i=0; i<10; ++i) {
 				//	std::cout << (int)buffer[8+i] << " ";
@@ -585,19 +591,20 @@ void* EPuckV1Driver::cameraReceptionThread(void* arg) {
 // SPECIFIC FUNCTIONS
 void EPuckV1Driver::saveData(Logger& log) {
 
-    log.addIn(log.file_eg, encoder_left);
-    log.addIn(log.file_ed, encoder_right);
-    log.addIn(log.file_ir[0], prox_sensors[0]);
-    log.addIn(log.file_ir[1], prox_sensors[1]);
-    log.addIn(log.file_ir[2], prox_sensors[2]);
-    log.addIn(log.file_ir[3], prox_sensors[3]);
-    log.addIn(log.file_ir[4], prox_sensors[4]);
-    log.addIn(log.file_ir[5], prox_sensors[5]);
-    log.addIn(log.file_ir[6], prox_sensors[6]);
-    log.addIn(log.file_ir[7], prox_sensors[7]);
-    log.addIn(log.file_p8, prox_sensors[8]);
-    log.addIn(log.file_p9, prox_sensors[9]);
-
+    log.addIn(log.file_eg, encoder_left_);
+    log.addIn(log.file_ed, encoder_right_);
+    log.addIn(log.file_ir[0], prox_sensors_[0]);
+    log.addIn(log.file_ir[1], prox_sensors_[1]);
+    log.addIn(log.file_ir[2], prox_sensors_[2]);
+    log.addIn(log.file_ir[3], prox_sensors_[3]);
+    log.addIn(log.file_ir[4], prox_sensors_[4]);
+    log.addIn(log.file_ir[5], prox_sensors_[5]);
+    log.addIn(log.file_ir[6], prox_sensors_[6]);
+    log.addIn(log.file_ir[7], prox_sensors_[7]);
+    /*
+    log.addIn(log.file_p8, prox_sensors_[8]);
+    log.addIn(log.file_p9, prox_sensors_[9]);
+    */
 }
 
 /**** Send commands to the wheel motors for 10 seconds****/

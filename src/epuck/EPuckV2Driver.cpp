@@ -26,11 +26,12 @@ EPuckV2Driver::EPuckV2Driver(Robot& robot, char** arg) : RobotDriver(robot, arg)
 	robot.vision_sensors = cv::Mat(120, 160, CV_8UC3);
 	cnt_iter == 1;
 
-	bytes_sent = 0;
-	bytes_recv = 0;
-	expected_recv_packets = 0;
+	bytes_sent_ = 0;
+	bytes_recv_ = 0;
+	expected_recv_packets_ = 0;
 	new_image_received_ = false;
 
+	x_pos_ = 0 , y_pos_ = 0, theta_ = 0;
 	left_steps_diff_ = 0, right_steps_diff_ = 0;
     left_steps_prev_ = 0, right_steps_prev_ = 0;
     left_steps_raw_prev_ = 0, right_steps_raw_prev_ = 0;
@@ -73,9 +74,9 @@ EPuckV2Driver::~EPuckV2Driver() {
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	for(int i = 0; i<10; ++i) {
-		bytes_sent = 0;
-		while(bytes_sent < sizeof(command_)) {
-			bytes_sent += send(fd_, (char *)&command_[bytes_sent], sizeof(command_)-bytes_sent, 0);
+		bytes_sent_ = 0;
+		while(bytes_sent_ < sizeof(command_)) {
+			bytes_sent_ += send(fd_, (char *)&command_[bytes_sent_], sizeof(command_)-bytes_sent_, 0);
 		}
 	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -189,11 +190,11 @@ bool EPuckV2Driver::init() {
 	command_[18] = 0;	// LED8 green
 	command_[19] = 0;	// LED8 blue
 	command_[20] = 0;	// speaker   
-	expected_recv_packets = 1;
+	expected_recv_packets_ = 1;
 
-	bytes_sent = 0;
-	while(bytes_sent < sizeof(command_)) {
-		bytes_sent += send(fd_, (char *)&command_[bytes_sent], sizeof(command_)-bytes_sent, 0);
+	bytes_sent_ = 0;
+	while(bytes_sent_ < sizeof(command_)) {
+		bytes_sent_ += send(fd_, (char *)&command_[bytes_sent_], sizeof(command_)-bytes_sent_, 0);
 	}
 	command_[2] = 0; // Stop proximity calibration.
 
@@ -203,15 +204,15 @@ bool EPuckV2Driver::init() {
 // TODO
 void EPuckV2Driver::read() {
  
-	bytes_recv = 0;
+	bytes_recv_ = 0;
 	int ret_value;
 	long mantis = 0;
 	short exp = 0;
 	float flt = 0.0;
 
-	while(expected_recv_packets > 0) {
-		bytes_recv = recv(fd_, (char *)&header_, 1, 0);
-		if (bytes_recv <= 0) {
+	while(expected_recv_packets_ > 0) {
+		bytes_recv_ = recv(fd_, (char *)&header_, 1, 0);
+		if (bytes_recv_ <= 0) {
 			closeConnection();
 			if(init() == false ) {
 				std::cerr << "Lost connection with the robot" << std::endl;
@@ -223,9 +224,9 @@ void EPuckV2Driver::read() {
 		
 		switch(header_) {
 			case 0x01:	// Camera.				
-				bytes_recv = 0;
-				while(bytes_recv < sizeof(this->image_)) {
-					ret_value = recv(fd_, (char *)&this->image_[bytes_recv], sizeof(this->image_)-bytes_recv, 0);
+				bytes_recv_ = 0;
+				while(bytes_recv_ < sizeof(this->image_)) {
+					ret_value = recv(fd_, (char *)&this->image_[bytes_recv_], sizeof(this->image_)-bytes_recv_, 0);
 					if(ret_value <= 0) {
 						closeConnection();
 						if(init() == false) {
@@ -235,7 +236,7 @@ void EPuckV2Driver::read() {
 							return; // Wait for the next sensor_ request
 						}
 					} else {
-						bytes_recv += ret_value;
+						bytes_recv_ += ret_value;
 						//std::cout << "image read = " << bytes_recv << std::endl;
 					}
 				}
@@ -253,9 +254,9 @@ void EPuckV2Driver::read() {
 				break;
 			
 			case 0x02: // Sensors.
-				bytes_recv = 0;
-				while(bytes_recv < sizeof(sensor_)) {
-					ret_value = recv(fd_, (char *)&sensor_[bytes_recv], sizeof(sensor_)-bytes_recv, 0);
+				bytes_recv_ = 0;
+				while(bytes_recv_ < sizeof(sensor_)) {
+					ret_value = recv(fd_, (char *)&sensor_[bytes_recv_], sizeof(sensor_)-bytes_recv_, 0);
 					if(ret_value <= 0) { 
 						closeConnection();
 						if(init() == false ) {
@@ -265,7 +266,7 @@ void EPuckV2Driver::read() {
 							return; // Wait for the next sensor_ request
 						}
 					} else {
-						bytes_recv += ret_value;
+						bytes_recv_ += ret_value;
 						//std::cout << "sensors read = " << bytes_recv << std::endl;
 					}
 				}
@@ -282,8 +283,8 @@ void EPuckV2Driver::read() {
 					mantis = -mantis;
 				}
 				flt = (mantis || exp) ? ((float) ldexp (mantis, (exp - 127 - 23))): 0;
-				acceleration=flt;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "acceleration: " << acceleration << std::endl;
+				acceleration_=flt;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "acceleration: " << acceleration_ << std::endl;
 
 				// Compute orientation.
 				mantis = (sensor_[10] & 0xff) + ((sensor_[11] & 0xffl) << 8) + (((sensor_[12] &0x7fl) | 0x80) << 16);
@@ -291,12 +292,12 @@ void EPuckV2Driver::read() {
 				if (sensor_[13] & 0x80)
 					mantis = -mantis;
 				flt = (mantis || exp) ? ((float) ldexp (mantis, (exp - 127 - 23))): 0;
-				orientation=flt;
-				if (orientation < 0.0 )
-					orientation=0.0;
-				if (orientation > 360.0 )
-					orientation=360.0;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "orientation: " << orientation << std::endl;
+				orientation_=flt;
+				if (orientation_ < 0.0 )
+					orientation_=0.0;
+				if (orientation_ > 360.0 )
+					orientation_=360.0;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "orientation: " << orientation_ << std::endl;
 
 				// Compute inclination.
 				mantis = (sensor_[14] & 0xff) + ((sensor_[15] & 0xffl) << 8) + (((sensor_[16] &0x7fl) | 0x80) << 16);
@@ -304,28 +305,28 @@ void EPuckV2Driver::read() {
 				if (sensor_[17] & 0x80)
 					mantis = -mantis;
 				flt = (mantis || exp) ? ((float) ldexp (mantis, (exp - 127 - 23))): 0;
-				inclination=flt;
-				if (inclination < 0.0 )
-					inclination=0.0;
-				if (inclination > 180.0 )
-					inclination=180.0;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "inclination: " << inclination << std::endl;
+				inclination_=flt;
+				if (inclination_ < 0.0 )
+					inclination_=0.0;
+				if (inclination_ > 180.0 )
+					inclination_=180.0;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "inclination: " << inclination_ << std::endl;
 
 				// Gyro
-				gyro_raw[0] = sensor_[18]+sensor_[19]*256;
-				gyro_raw[1] = sensor_[20]+sensor_[21]*256;
-				gyro_raw[2] = sensor_[22]+sensor_[23]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "gyro: " << gyro_raw[0] << "," << gyro_raw[1] << "," << gyro_raw[2] << std::endl;					
+				gyro_raw_[0] = sensor_[18]+sensor_[19]*256;
+				gyro_raw_[1] = sensor_[20]+sensor_[21]*256;
+				gyro_raw_[2] = sensor_[22]+sensor_[23]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "gyro: " << gyro_raw_[0] << "," << gyro_raw_[1] << "," << gyro_raw_[2] << std::endl;					
 
 				// Magnetometer
-				magnetic_field[0] = *((float*)&sensor_[24]);
-				magnetic_field[1] = *((float*)&sensor_[28]);
-				magnetic_field[2] = *((float*)&sensor_[32]);
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "mag: " << magnetic_field[0] << "," << magnetic_field[1] << "," << magnetic_field[2] << std::endl;	
+				magnetic_field_[0] = *((float*)&sensor_[24]);
+				magnetic_field_[1] = *((float*)&sensor_[28]);
+				magnetic_field_[2] = *((float*)&sensor_[32]);
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "mag: " << magnetic_field_[0] << "," << magnetic_field_[1] << "," << magnetic_field_[2] << std::endl;	
 
 				// Temperature.
-				temperature = sensor_[36];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "temperature: " << (int)temperature << std::endl;
+				temperature_ = sensor_[36];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "temperature: " << (int)temperature_ << std::endl;
 
 				// Proximity sensors data.
 				robot().proximity_sensors.ir[0] = sensor_[37]+sensor_[38]*256;
@@ -340,34 +341,34 @@ void EPuckV2Driver::read() {
 				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "prox: " << robot().proximity_sensors.ir[0] << "," << robot().proximity_sensors.ir[1] << "," << robot().proximity_sensors.ir[2] << "," << robot().proximity_sensors.ir[3] << "," << robot().proximity_sensors.ir[4] << "," << robot().proximity_sensors.ir[5] << "," << robot().proximity_sensors.ir[6] << "," << robot().proximity_sensors.ir[7] << std::endl;							
 
 				// Compute abmient light.
-				light_avg += (sensor_[53]+sensor_[54]*256);
-				light_avg += (sensor_[55]+sensor_[56]*256);
-				light_avg += (sensor_[57]+sensor_[58]*256);
-				light_avg += (sensor_[59]+sensor_[60]*256);
-				light_avg += (sensor_[61]+sensor_[62]*256);
-				light_avg += (sensor_[63]+sensor_[64]*256);
-				light_avg += (sensor_[65]+sensor_[66]*256);
-				light_avg += (sensor_[67]+sensor_[68]*256);
-				light_avg = (int) (light_avg/8);
-				light_avg = (light_avg>4000)?4000:light_avg;
-				if(light_avg<0) {
-					light_avg=0;
+				light_avg_ += (sensor_[53]+sensor_[54]*256);
+				light_avg_ += (sensor_[55]+sensor_[56]*256);
+				light_avg_ += (sensor_[57]+sensor_[58]*256);
+				light_avg_ += (sensor_[59]+sensor_[60]*256);
+				light_avg_ += (sensor_[61]+sensor_[62]*256);
+				light_avg_ += (sensor_[63]+sensor_[64]*256);
+				light_avg_ += (sensor_[65]+sensor_[66]*256);
+				light_avg_ += (sensor_[67]+sensor_[68]*256);
+				light_avg_ = (int) (light_avg_/8);
+				light_avg_ = (light_avg_>4000)?4000:light_avg_;
+				if(light_avg_<0) {
+					light_avg_=0;
 				}
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip << "] " << "lightAvg: " << light_avg << std::endl;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip << "] " << "lightAvg: " << light_avg_ << std::endl;
 				
 				// ToF
-				distance_cm = (uint16_t)(((uint8_t)sensor_[70]<<8)|((uint8_t)sensor_[69]))/10;
-				if(distance_cm > 200) {
-					distance_cm = 200;
+				distance_cm_ = (uint16_t)(((uint8_t)sensor_[70]<<8)|((uint8_t)sensor_[69]))/10;
+				if(distance_cm_ > 200) {
+					distance_cm_ = 200;
 				}
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "distanceCm: " << distance_cm << "(" << (int)sensor_[69] << "," << (int)sensor_[70] << ")" << std::endl;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "distanceCm: " << distance_cm_ << "(" << (int)sensor_[69] << "," << (int)sensor_[70] << ")" << std::endl;
 
 				// Microphone
-				mic_volume[0] = ((uint8_t)sensor_[71]+(uint8_t)sensor_[72]*256);
-				mic_volume[1] = ((uint8_t)sensor_[73]+(uint8_t)sensor_[74]*256);
-				mic_volume[2] = ((uint8_t)sensor_[75]+(uint8_t)sensor_[76]*256);
-				mic_volume[3] = ((uint8_t)sensor_[77]+(uint8_t)sensor_[78]*256);
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "mic: " << mic_volume[0] << "," << mic_volume[1] << "," << mic_volume[2] << "," << mic_volume[3] << std::endl;
+				mic_volume_[0] = ((uint8_t)sensor_[71]+(uint8_t)sensor_[72]*256);
+				mic_volume_[1] = ((uint8_t)sensor_[73]+(uint8_t)sensor_[74]*256);
+				mic_volume_[2] = ((uint8_t)sensor_[75]+(uint8_t)sensor_[76]*256);
+				mic_volume_[3] = ((uint8_t)sensor_[77]+(uint8_t)sensor_[78]*256);
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "mic: " << mic_volume_[0] << "," << mic_volume_[1] << "," << mic_volume_[2] << "," << mic_volume_[3] << std::endl;
 
 				// Left steps
 				motor_steps_[0] = (double)(sensor_[79]+sensor_[80]*256);
@@ -376,38 +377,38 @@ void EPuckV2Driver::read() {
 				//if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "steps: " << motorSteps[0] << "," << motorSteps[1] << std::endl;
 
 				// Battery
-				battery_raw = (uint8_t)sensor_[83]+(uint8_t)sensor_[84]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "batteryRaw: " << battery_raw << std::endl;
+				battery_raw_ = (uint8_t)sensor_[83]+(uint8_t)sensor_[84]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "batteryRaw: " << battery_raw_ << std::endl;
 				
 				// Micro sd state.
-				micro_sd_state = sensor_[85];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "microSdState: " << (int)micro_sd_state << std::endl;
+				micro_sd_state_ = sensor_[85];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "microSdState: " << (int)micro_sd_state_ << std::endl;
 
 				// Tv remote.
-				ir_check = sensor_[86];
-				ir_address = sensor_[87];
-				ir_data = sensor_[88];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "tv remote: " << (int)ir_check << "," << (int)ir_address << "," << (int)ir_data << std::endl;
+				ir_check_ = sensor_[86];
+				ir_address_ = sensor_[87];
+				ir_data_ = sensor_[88];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "tv remote: " << (int)ir_check_ << "," << (int)ir_address_ << "," << (int)ir_data_ << std::endl;
 
 				// Selector.
-				selector = sensor_[89];
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "selector: " << (int)selector << std::endl;
+				selector_ = sensor_[89];
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "selector: " << (int)selector_ << std::endl;
 
 				// Ground sensor_ proximity.
-				ground_prox[0] = sensor_[90]+sensor_[91]*256;
-				ground_prox[1] = sensor_[92]+sensor_[93]*256;
-				ground_prox[2] = sensor_[94]+sensor_[95]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "groundProx: " << ground_prox[0] << "," << ground_prox[1] << "," << ground_prox[2] << std::endl;
+				ground_prox_[0] = sensor_[90]+sensor_[91]*256;
+				ground_prox_[1] = sensor_[92]+sensor_[93]*256;
+				ground_prox_[2] = sensor_[94]+sensor_[95]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "groundProx: " << ground_prox_[0] << "," << ground_prox_[1] << "," << ground_prox_[2] << std::endl;
 
 				// Ground sensor_ ambient light.
-				ground_ambient[0] = sensor_[96]+sensor_[97]*256;
-				ground_ambient[1] = sensor_[98]+sensor_[99]*256;
-				ground_ambient[2] = sensor_[100]+sensor_[101]*256;
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "groundAmbient: " << ground_ambient[0] << "," << ground_ambient[1] << "," << ground_ambient[2] << std::endl;
+				ground_ambient_[0] = sensor_[96]+sensor_[97]*256;
+				ground_ambient_[1] = sensor_[98]+sensor_[99]*256;
+				ground_ambient_[2] = sensor_[100]+sensor_[101]*256;
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "groundAmbient: " << ground_ambient_[0] << "," << ground_ambient_[1] << "," << ground_ambient_[2] << std::endl;
 
 				// Button state.
-				button_state = sensor_[102];			
-				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "buttonState: " << (int)button_state << std::endl;
+				button_state_ = sensor_[102];			
+				if(DEBUG_UPDATE_SENSORS_DATA)std::cout << "[" << robot().ip  << "] " << "buttonState: " << (int)button_state_ << std::endl;
 
 				break;
 			
@@ -419,27 +420,28 @@ void EPuckV2Driver::read() {
 				printf("unexpected packet\r\n");
 				break;
 		}
-		expected_recv_packets--;
+		expected_recv_packets_--;
 	}
 
-	if(camera_enabled) {
-		expected_recv_packets = 2;
+	if(camera_enabled_) {
+		expected_recv_packets_ = 2;
 	} else {
-		expected_recv_packets = 1;
+		expected_recv_packets_ = 1;
 	}
 	printSensors();
 };
 
 void EPuckV2Driver::sendCmd() {
+	bool on = false;
 
     //std::cout << "send V1\n";
 	command_[0] = 0x80;
 	command_[1] = 0b11;	// 0b10 Sensors enabled , 0b01 Image enabled
 	command_[2] = 0;		// Calibrate proximity sensors.
-	command_[3] = 0;		// left motor LSB
-	command_[4] = robot().wheels_command.left_velocity;		// left motor MSB
-	command_[5] = 0;		// right motor LSB
-	command_[6] = robot().wheels_command.right_velocity;		// right motor MSB
+	command_[3] = (!on)*robot().wheels_command.left_velocity;		// left motor LSB
+	command_[4] = (on)*robot().wheels_command.left_velocity;		// left motor MSB
+	command_[5] = (!on)*robot().wheels_command.right_velocity;		// right motor LSB
+	command_[6] = (on)*robot().wheels_command.right_velocity;		// right motor MSB
 	command_[7] = 0b0; //0b111111;	// lEDs
 	command_[8] = 0;		// LED2 red
 	command_[9] = 0;		// LED2 green
@@ -455,9 +457,9 @@ void EPuckV2Driver::sendCmd() {
 	command_[19] = 0;	// LED8 blue
 	command_[20] = 0;	// speaker
 
-	bytes_sent = 0;
-	while(bytes_sent < sizeof(command_)) {
-		bytes_sent += send(fd_, (char *)&command_[bytes_sent], sizeof(command_)-bytes_sent, 0);
+	bytes_sent_ = 0;
+	while(bytes_sent_ < sizeof(command_)) {
+		bytes_sent_ += send(fd_, (char *)&command_[bytes_sent_], sizeof(command_)-bytes_sent_, 0);
 	}
 
 };
@@ -613,14 +615,53 @@ void EPuckV2Driver::positionDataCorrection() {
 	delta_steps_ = (right_steps_diff_ + left_steps_diff_)/2;        // Expressed in meters.
 	if(DEBUG_ODOMETRY)std::cout << "[" << robot().ip << "] " << "delta theta, steps: " << delta_theta_ << ", " << delta_steps_ << std::endl;
 
-	robot().current_pose.x += delta_steps_*cos(robot().current_pose.th + delta_theta_/2);   // Expressed in meters.
-	robot().current_pose.y += delta_steps_*sin(robot().current_pose.th + delta_theta_/2);   // Expressed in meters.
-	robot().current_pose.th += delta_theta_;    // Expressed in radiant.
-	if(DEBUG_ODOMETRY)std::cout << "[" << robot().ip << "] " << "x, y, theta: " << robot().current_pose.x << ", " << robot().current_pose.y << ", " << robot().current_pose.th << std::endl;
+	x_pos_ += delta_steps_*cos(theta_ + delta_theta_/2);   // Expressed in meters.
+	y_pos_ += delta_steps_*sin(theta_ + delta_theta_/2);   // Expressed in meters.
+	theta_ += delta_theta_;    // Expressed in radiant.
+
+	
+
+	if(DEBUG_ODOMETRY)std::cout << "[" << robot().ip << "] " << "x, y, theta: " << x_pos_ << ", " << y_pos_ << ", " << theta_ << std::endl;
 	
 	left_steps_prev_ = motor_position_data_correct_[0]*MOT_STEP_DIST;     // Expressed in meters.
 	right_steps_prev_ = motor_position_data_correct_[1]*MOT_STEP_DIST;    // Expressed in meters.
 
-	robot().wheels_state.left_position= (motor_position_data_correct_[0]%1000)*(2*M_PI/1000);
-	robot().wheels_state.right_position= (motor_position_data_correct_[1]%1000)*(2*M_PI/1000);
+	robot().current_pose.x = x_pos_;
+	robot().current_pose.y = y_pos_;
+	robot().current_pose.th = thetaIntervalAdjustment(theta_);
+	robot().wheels_state.left_position= wheelIntervalAdjustment(motor_position_data_correct_[0]);//%1000)*(2*M_PI/1000);
+	robot().wheels_state.right_position= wheelIntervalAdjustment(motor_position_data_correct_[1]); //(motor_position_data_correct_[1]%1000)*(2*M_PI/1000);
+	
+}
+
+double EPuckV2Driver::thetaIntervalAdjustment(double val){
+    if (val < 0) {
+        if (val > -M_PI){
+            val = std::fabs(val) + M_PI;
+        } else {
+            val = std::fabs(val) - M_PI;
+        } 
+    }
+    val = std::fmod(val, 2*M_PI);
+
+	if (val > M_PI)
+        val = -val + M_PI;
+	
+	return val;
+}
+
+double EPuckV2Driver::wheelIntervalAdjustment(double val) {
+	val = std::fmod(val,1000)*(2*M_PI/1000);
+	if(val < 0 ) {
+		if (val > -M_PI){
+            val = std::fabs(val) + M_PI;
+        } else {
+            val = std::fabs(val) - M_PI;
+        } 
+	}
+	if (val > M_PI)
+        val = -val + M_PI;
+	
+	return val;
+
 }

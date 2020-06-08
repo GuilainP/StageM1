@@ -89,42 +89,43 @@ private:
     /* Variables of main thread */
 
     typedef int SOCKET;
-    SOCKET camera_socket, command_sending_socket, sensor_receiving_socket;
-    char all_sensors[100]; // Buffer de reception des capteurs
-    int encoder_left, encoder_right, prev_encoder_left, prev_encoder_right;
-    int prox_sensors[10];
-    bool stop_threads;
+    SOCKET camera_socket_, command_sending_socket_, sensor_receiving_socket_;
+    char all_sensors_[100]; // Buffer de reception des capteurs
+    int encoder_left_, encoder_right_, prev_encoder_left_, prev_encoder_right_;
+    int prox_sensors_[10];
+    bool stop_threads_;
 
     enum Controller { setWheelCmd, setVel, setRobVel, followWall, visServo };
     Controller c;
 
     struct timeval startTime, curTime, prevTime;
     double timeSinceStart;
-    char MotorCommand[15];      // command for the two motors
-    cv::Mat robImg;
-    Pose prevPoseFromEnc, curPoseFromEnc, prevPoseFromVis, curPoseFromVis, initPose;
 
-    int speedLeft, speedRight;
-    float vel, omega;
+    char MotorCommand_[15];      // command for the two motors
+    cv::Mat robImg_;
+    Pose prev_pose_from_enc_, cur_pose_from_enc_, prev_pose_from_vis_, cur_pose_from_vis_, init_pose_;
+
+    int speed_left_, speed_right_;
+    float vel_, omega_;
 
     /* Variables for threads and sockets */
     typedef struct sockaddr_in SOCKADDR_IN;
-    SOCKADDR_IN sockaddrin_init, local_sockaddrin_init, sockaddrin_camera,
-        sockaddrin_reception_capteurs, local_sockaddrin_envoie_commandes,
-        sockaddrin_envoie_commandes;
-    SOCKET sock_init;
+    SOCKADDR_IN sockaddrin_init_, local_sockaddrin_init_, sockaddrin_camera_,
+        sockaddrin_reception_capteurs_, local_sockaddrin_envoie_commandes_,
+        sockaddrin_envoie_commandes_;
+    SOCKET sock_init_;
     typedef struct sockaddr SOCKADDR;
 
     // Camera variables
-    bool camera_active;
+    bool camera_active_;
     struct imageData {
         int id_img;
         int id_block;
         unsigned long date;
         unsigned char msg[230400];
-    } img_data;
+    } img_data_;
 
-    pthread_t IDCameraReceptionThread; 
+    pthread_t id_camera_reception_thread_; 
 
     static void *cameraThreadFunc(void * p) {
         EPuckV1Driver *a = (EPuckV1Driver *)p; // cast *p to EPuckV1Driver class type
@@ -152,6 +153,8 @@ private:
     void closeConnection();
     void proxDataRawValuesToMeters();
     void positionDataCorrection();
+    double thetaIntervalAdjustment(double);
+    double wheelIntervalAdjustment(double);
     void odometry();
 
     unsigned char image_[160*120*2];
@@ -161,9 +164,9 @@ private:
     int fd_;
     unsigned char command_[21];
     unsigned char header_, sensor_[104];
-    int bytes_sent, bytes_recv ;
-    bool camera_enabled, ground_sensors_enabled;
-    uint8_t expected_recv_packets;
+    int bytes_sent_, bytes_recv_ ;
+    bool camera_enabled_, ground_sensors_enabled_;
+    uint8_t expected_recv_packets_;
     bool new_image_received_;
 
     // EPuckV2 data variables
@@ -184,21 +187,22 @@ private:
 
     // Sensors data variables
 
-    float acceleration, orientation, inclination;/**< acceleration data*/
+    float acceleration_, orientation_, inclination_;/**< acceleration data*/
+    double x_pos_ , y_pos_, theta_;
 
-    int16_t gyro_raw[3];
-    float magnetic_field[3];
-    uint8_t temperature;
-    int light_avg;		/**< light sensor data*/
+    int16_t gyro_raw_[3];
+    float magnetic_field_[3];
+    uint8_t temperature_;
+    int light_avg_;		/**< light sensor data*/
     
-    uint16_t distance_cm;
-    uint16_t mic_volume[4];	/**< microphone data*/
-    uint16_t battery_raw;
-    uint8_t micro_sd_state;
-    uint8_t ir_check, ir_address, ir_data;
-    uint8_t selector;
-    int16_t ground_prox[3], ground_ambient[3];
-    uint8_t button_state;
+    uint16_t distance_cm_;
+    uint16_t mic_volume_[4];	/**< microphone data*/
+    uint16_t battery_raw_;
+    uint8_t micro_sd_state_;
+    uint8_t ir_check_, ir_address_, ir_data_;
+    uint8_t selector_;
+    int16_t ground_prox_[3], ground_ambient_[3];
+    uint8_t button_state_;
 
 };
 
