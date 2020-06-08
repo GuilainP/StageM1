@@ -2,27 +2,16 @@
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetVelocities(struct timeval startTime, const float& vel, const float& omega, char MotorCmd[15]) {
+void SetVelocities(const float& vel, const float& omega, double& robVelLeft, double& robVelRight) {
     std::cout << "The required robot velocities are v "<< vel <<" w "<< omega <<"\n\n\n";
-    struct timeval curTime;
-    gettimeofday(&curTime, NULL);
-    long int timeSinceStart =
-            ((curTime.tv_sec * 1000000 + curTime.tv_usec) -
-             (startTime.tv_sec * 1000000 + startTime.tv_usec)) /
-            1000;
-    std::cout << "timeSinceStart = " << timeSinceStart << " ms\n";
+
     // Commands to be sent to the left and right wheels
-    int speedG;
-    int speedD;
-    if (timeSinceStart < 10000) {
-        speedG = 0;
-        speedD = 0;
-        // Sends the command to the epuck motors
-        sprintf(MotorCmd, "D,%d,%d", speedG, speedD);
-    } else {
-        sprintf(MotorCmd, "D,%d,%d", 0, 0);
-    }
-    std::cout << "SetRobotVelocities wheel speeds are "<< speedG << " " << speedD;
+    //  robVelLeft && robVelRight ??
+
+    //int speedG;
+    //int speedD;
+    
+    std::cout << "SetRobotVelocities wheel speeds are "<< robVelLeft << " " << robVelRight;
 }
 /**** Convert IR distances to points x y in robot frame, estimate line parameters y = mx +p in robot frame and then convert everything to world frame ****/
 void ConvertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld) {
@@ -246,28 +235,19 @@ cv::Point ProcessImageToGetBarycenter(cv::Mat& colRawImg, float & areaPix) {
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetRobotVelocities(RobotParameters rp, struct timeval startTime, const float& vel, const float& omega, char MotorCmd[15]) {
+void SetRobotVelocities(RobotParameters rp, const float& vel, const float& omega, double& robVelLeft, double& robVelRight) {
     std::cout << "The required robot velocities are v " << vel << " w " << omega << "\n\n\n";
-    struct timeval curTime;
-    gettimeofday(&curTime, NULL);
-    long int timeSinceStart =
-            ((curTime.tv_sec * 1000000 + curTime.tv_usec) -
-             (startTime.tv_sec * 1000000 + startTime.tv_usec)) /
-            1000;
-    std::cout << "timeSinceStart = " << timeSinceStart << " ms\n";
+   
     // Commands to be sent to the left and right wheels
-    int speedL;
-    int speedR;
+    //  robVelLeft && robVelRight ??
+    //int speedL;
+    //int speedR;
     const float encFactor  = 0.0054;
-    if (timeSinceStart < 10000) {
-        speedL = (2*vel - rp.axis_length * omega) / (rp.wheel_radius * encFactor);//TODO there is a 2 * error factor on pure rotation (robot pivots twice faster than required)
-        speedR = (2*vel + rp.axis_length * omega) / (rp.wheel_radius * encFactor);
-        // Sends the command to the epuck motors
-        sprintf(MotorCmd, "D,%d,%d", speedL, speedR);
-    } else {
-        sprintf(MotorCmd, "D,%d,%d", 0, 0);
-    }
-    std::cout << "SetRobotVelocities wheel speeds are " << speedL << " " << speedR;
+    
+    robVelLeft = (2*vel - rp.axis_length * omega) / (rp.wheel_radius * encFactor);//TODO there is a 2 * error factor on pure rotation (robot pivots twice faster than required)
+    robVelRight = (2*vel + rp.axis_length * omega) / (rp.wheel_radius * encFactor);
+    
+    std::cout << "SetRobotVelocities wheel speeds are " << robVelLeft << " " << robVelRight;
 }
 
 // control robot using images from the camera
@@ -278,7 +258,7 @@ void ControlRobotWithVisualServoing(const cv::Point &baryc, float &vel, float &o
     omega = 0;
 }
 // make robot follow a wall using infrared measurements for ten seconds
-void ControlRobotToFollowWall(struct timeval startTime, float &vel, float &omega) {
+void ControlRobotToFollowWall(float &vel, float &omega) {
     // replace the lines below with commands v and w needed to follow wall
     // from xA, yA, xB et yB
     // Load these variables from files xA.txt etc...
@@ -287,20 +267,10 @@ void ControlRobotToFollowWall(struct timeval startTime, float &vel, float &omega
     float mMur, pMur; // parametres definissant le mur dans le repere robot
     std::cout << "equation of the line in the robot frame: y = " << mMur << " x + " << pMur << " \n";
     // measure the time
-    struct timeval curTime;
-    gettimeofday(&curTime, NULL);
-    long int timeSinceStart =
-            ((curTime.tv_sec * 1000000 + curTime.tv_usec) -
-             (startTime.tv_sec * 1000000 + startTime.tv_usec)) /
-            1000;
-    std::cout << "timeSinceStart = " << timeSinceStart << " ms\n";
-    if (timeSinceStart < 10000) {
-        vel = 0;
-        omega = 0;
-    } else {
-        vel = 0;
-        omega = 0;
-    }
+
+    vel = 0;
+    omega = 0;
+
 }
 void InfraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log) {
     // infrared values
@@ -353,4 +323,10 @@ void MetricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10
     }
     mWall = -.5;
     pWall = 0.05;
+}
+
+/**** Set commands to the wheel motors for 10 seconds****/
+void setWheelCommands(Robot& robot, const int& speedLeft, const int& speedRight){
+    robot.wheels_command.left_velocity = speedLeft;
+    robot.wheels_command.right_velocity = speedRight;
 }

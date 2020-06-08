@@ -31,9 +31,10 @@ EPuckV1Driver::EPuckV1Driver(Robot& robot, char** arg) : RobotDriver(robot, arg)
 }
 
 EPuckV1Driver::~EPuckV1Driver() {
+    log().CloseAll();
     stop_threads_ = true;
     // Send a zero velocity command before exiting
-    setWheelCommands(startTime, 0, 0, MotorCommand_);
+    setWheelCommands(robot(),0, 0);
     sendMotorAndLEDCommandToRobot(MotorCommand_);
     std::cout << "All good, mate\n";
 
@@ -63,55 +64,6 @@ bool EPuckV1Driver::init() {
     }
 
     std::cout << "\nINIT \n";
-    int argc = 0;
-    while (argv[argc] != NULL) {
-        argc++;
-    }
-    
-    std::string cont = argv[1];
-    
-    if (cont == "setWheelCmd") {
-        if (argc != 5) {
-            incorrectArguments(argc);
-        } else {
-            c = setWheelCmd;
-            robot().wheels_command.left_velocity = std::stol(argv[3]);
-            robot().wheels_command.right_velocity  = std::stol(argv[4]);
-        }
-    } else if (cont == "setVel") {
-        if (argc != 5) {
-            incorrectArguments(argc);
-        } else {
-            c = setVel;
-            // vel --> robot().desired_velocity
-            // omega --> robot().desired_angle
-            robot().desired_velocity = std::stol(argv[3]);
-            robot().desired_angle = std::stod(argv[4]);
-        }
-    } 
-/*    else if (cont == "setRobVel") {
-        if (argc != 5) {
-            incorrectArguments(argc);
-        } else {
-            c = setRobVel;
-            robot().desired_velocity = std::stod(argv[3]);
-            robot().desired_angle = std::stod(argv[4]);
-        }
-    } else if (cont == "followWall") {
-        if (argc != 3)
-            incorrectArguments(argc);
-        else
-            c = followWall;
-    } else if (cont == "visServo") {
-        if (argc != 3)
-            incorrectArguments(argc);
-        else
-            c = visServo;
-    } else {
-        incorrectArguments(argc);
-    }
-*/
-    std::cout << "Controller is "<< argv[1] << "\n";
 
     cnt_iter = 1; // to get the current iteration
     gettimeofday(&startTime, NULL); // get starting time
@@ -159,28 +111,33 @@ void EPuckV1Driver::read() {
     ConvertIRPointsForWallFollowing(robot().parameters, dist, cur_pose_from_enc_, ProxInWFrame, mRob, pRob, mWorld, pWorld);
     DrawMapWithRobot(robot().parameters, cur_pose_from_enc_, cur_pose_from_vis_, ProxInWFrame, mWorld, pWorld);
 
-    //control robot
-    if (c == setWheelCmd) {
-        setWheelCommands(startTime, robot().wheels_command.left_velocity, robot().wheels_command.right_velocity, MotorCommand_); // send commmands to wheels
-    } else if (c == setVel) {
-        SetVelocities(startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot to be done by students
-    } 
-/*  else if (c == setRobVel) {
-        SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
-    } else if (c == followWall) {
-        ControlRobotToFollowWall(startTime, (float)robot().desired_velocity, (float)robot().desired_angle); // make robot follow a wall using infrared measurements
-        SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
-    } else if (c == visServo) {
-        ControlRobotWithVisualServoing(baryc, (float)robot().desired_velocity, (float)robot().desired_angle); // control robot using images from the camera
-        SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
-    }
-*/
+    
     saveData(log());
 
 };
 
 
 void EPuckV1Driver::sendCmd() {
+      /////////////////////////
+     /////////TIME////////////
+    /////////////////////////
+
+    // Sends the command to the epuck motors
+    struct timeval curTime;
+    gettimeofday(&curTime, NULL);
+    long int timeSinceStart =
+        ((curTime.tv_sec * 1000000 + curTime.tv_usec) -
+         (startTime.tv_sec * 1000000 + startTime.tv_usec)) /
+        1000;
+    std::cout << "timeSinceStart = " << timeSinceStart << " ms\n";
+
+    //if (timeSinceStart < 10000) {
+        // Sends the command to the epuck motors
+        sprintf(MotorCommand_, "D,%d,%d", (int)robot().wheels_command.left_velocity, (int)robot().wheels_command.right_velocity);
+    //} else {
+    //    sprintf(MotorCommand_, "D,%d,%d", 0, 0);
+    //}
+    
     sendMotorAndLEDCommandToRobot(MotorCommand_);
 
     cnt_iter++;
@@ -607,34 +564,3 @@ void EPuckV1Driver::saveData(Logger& log) {
     */
 }
 
-/**** Send commands to the wheel motors for 10 seconds****/
-void EPuckV1Driver::setWheelCommands(struct timeval startTime, const int& speedLeft, const int& speedRight, char MotorCmd[15]) {
-    struct timeval curTime;
-    gettimeofday(&curTime, NULL);
-    long int timeSinceStart =
-        ((curTime.tv_sec * 1000000 + curTime.tv_usec) -
-         (startTime.tv_sec * 1000000 + startTime.tv_usec)) /
-        1000;
-    std::cout << "SetWheelCommands\ttimeSinceStart = " << timeSinceStart << " ms\n";
-    if (timeSinceStart < 10000) {
-        // Sends the command to the epuck motors
-        sprintf(MotorCmd, "D,%d,%d", speedLeft, speedRight);
-    } else {
-        sprintf(MotorCmd, "D,%d,%d", 0, 0);
-    }
-}
-
-void EPuckV1Driver::incorrectArguments(const int& argc) {
-    std::cout << "There are "<< argc -1 << " arguments instead of 2 or 4\n";
-    std::cout <<
-        "The first argument should be one of the "
-        "following:"
-        "\n\tsetWheelCmd\n\tsetRobVel\n\tfollowWall\n\tvisServo\n";
-    std::cout << "The following arguments should be:\n";
-    std::cout << "\tsetWheelCmd: IP leftWheelCmd rightWheelCmd\n";
-    std::cout << "\tsetVel: IP v(linear vel) w(angular vel)\n";
-    std::cout << "\tsetRobVel: IP v(linear vel) w(angular vel)\n";
-    std::cout << "\tfollowWall: IP\n";
-    std::cout << "\tvisServo: IP\n";
-    exit(0);
-}

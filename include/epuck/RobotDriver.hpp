@@ -76,7 +76,7 @@ private:
     void initSocketOpening(const std::string& epuck_ip);
     void openCameraSocket();
     void openSensorReceivingSocket();
-    void setWheelCommands(struct timeval startTime, const int& speed_L, const int& speed_R, char MotorCmd[15]);
+    //void setWheelCommands(struct timeval startTime, const int& speed_L, const int& speed_R, char MotorCmd[15]);
     void saveData(Logger& log);
     void* cameraReceptionThread(void* arg);
     void splitSensorMeasures();
@@ -84,7 +84,6 @@ private:
     void sendMotorAndLEDCommandToRobot(const char MotorCmd[15]);
     void closeSocket(int NOM_SOCKET);
     void openCommandSendingSocket(const std::string& epuck_ip);
-    void incorrectArguments(const int& argc);
 
     /* Variables of main thread */
 
@@ -94,9 +93,6 @@ private:
     int encoder_left_, encoder_right_, prev_encoder_left_, prev_encoder_right_;
     int prox_sensors_[10];
     bool stop_threads_;
-
-    enum Controller { setWheelCmd, setVel, setRobVel, followWall, visServo };
-    Controller c;
 
     struct timeval startTime, curTime, prevTime;
     double timeSinceStart;

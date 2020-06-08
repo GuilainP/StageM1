@@ -54,20 +54,23 @@ void DrawMapWithRobot(RobotParameters rp, const Pose & rPoseEnc, const Pose & rP
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetRobotVelocities(RobotParameters rp, struct timeval startTime, const float& vel, const float& omega, char MotorCmd[15]);
+void SetRobotVelocities(RobotParameters rp, const float& vel, const float& omega, double& robVelLeft, double& robVelRight);
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetVelocities(struct timeval startTime, const float& vel, const float& omega, char MotorCmd[15]);
+void SetVelocities(const float& vel, const float& omega, double& robVelLeft, double& robVelRight);
 
 // control robot using images from the camera
 void ControlRobotWithVisualServoing(const cv::Point & baryc, float & vel, float & omega);
 
 // make robot follow a wall using infrared measurements for ten seconds
-void ControlRobotToFollowWall(struct timeval startTime, float &vel, float &omega);
+void ControlRobotToFollowWall(float &vel, float &omega);
 
 //using IR calibration convert the IR values to metric distances
 void InfraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log);
 
 //using the robot parameters, map metric distances to the robot frame
 void MetricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall);
+
+/**** Set commands to the wheel motors for 10 seconds****/
+void setWheelCommands(Robot& robot, const int& speedLeft, const int& speedRight);
