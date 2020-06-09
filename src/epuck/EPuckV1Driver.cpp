@@ -28,13 +28,14 @@
 EPuckV1Driver::EPuckV1Driver(Robot& robot, char** arg) : RobotDriver(robot, arg) {
     stop_threads_ = false;
     camera_active_ = true;
+    is_the_connection_lost_ = 0;
 }
 
 EPuckV1Driver::~EPuckV1Driver() {
     log().CloseAll();
     stop_threads_ = true;
     // Send a zero velocity command before exiting
-    setWheelCommands(robot(),0, 0);
+    setWheelCommands(robot());
     sendMotorAndLEDCommandToRobot(MotorCommand_);
     std::cout << "All good, mate\n";
 
@@ -81,7 +82,7 @@ void EPuckV1Driver::read() {
     gettimeofday(&prevTime, NULL);
     //show and save image
     if (camera_active_ == true) {
-        robImg_ = showAndSaveRobotImage(img_data_.msg, cnt_iter);
+        rob_img_ = showAndSaveRobotImage(img_data_.msg, cnt_iter);
     }
     gettimeofday(&curTime, NULL);
     timeSinceStart = (curTime.tv_sec - prevTime.tv_sec) * 1e3 + (curTime.tv_usec - prevTime.tv_usec) * 1e-3;
@@ -94,25 +95,27 @@ void EPuckV1Driver::read() {
         cur_pose_from_enc_ = init_pose_;
         cur_pose_from_vis_ = init_pose_;
     } else {
-        cur_pose_from_enc_ = GetCurrPoseFromEncoders(robot().parameters, prev_pose_from_enc_, encoder_left_, encoder_right_, prev_encoder_left_, prev_encoder_right_, log());
+        cur_pose_from_enc_ = getCurrPoseFromEncoders(robot().parameters, prev_pose_from_enc_, encoder_left_, encoder_right_, prev_encoder_left_, prev_encoder_right_, log());
     }
     float areaPix;
-    cv::Point baryc = cv::Point(0.0,0.0); // ProcessImageToGetBarycenter(robImg , areaPix);
-    cur_pose_from_vis_ = GetCurrPoseFromVision(baryc, cur_pose_from_enc_.th, areaPix, log());
+    cv::Point baryc = processImageToGetBarycenter(rob_img_ , areaPix);
+    cur_pose_from_vis_ = getCurrPoseFromVision(baryc, cur_pose_from_enc_.th, areaPix, log());
     prev_pose_from_enc_ = cur_pose_from_enc_;
     prev_pose_from_vis_ = cur_pose_from_vis_;
 
     receiveSensorMeasures(); // receive data from encoders and proximity sensors///////////////////////////////////////////////////////////////////////////////////////////////////////////
     splitSensorMeasures(); // splits measures and converts them to integer///////////////////////////////////////////////////////////////////////////////////////////////////////////
     float dist[10];
-    InfraRedValuesToMetricDistance(robot().parameters, prox_sensors_, dist, log());
+    infraRedValuesToMetricDistance(robot().parameters, prox_sensors_, dist, log());
     cv::Point2f ProxInWFrame[10];
     float mRob, pRob, mWorld, pWorld;
-    ConvertIRPointsForWallFollowing(robot().parameters, dist, cur_pose_from_enc_, ProxInWFrame, mRob, pRob, mWorld, pWorld);
-    DrawMapWithRobot(robot().parameters, cur_pose_from_enc_, cur_pose_from_vis_, ProxInWFrame, mWorld, pWorld);
+    convertIRPointsForWallFollowing(robot().parameters, dist, cur_pose_from_enc_, ProxInWFrame, mRob, pRob, mWorld, pWorld);
+    drawMapWithRobot(robot().parameters, cur_pose_from_enc_, cur_pose_from_vis_, ProxInWFrame, mWorld, pWorld);
 
     
     saveData(log());
+    closeFilesIfConnectionLost();
+
 
 };
 
@@ -548,19 +551,33 @@ void* EPuckV1Driver::cameraReceptionThread(void* arg) {
 // SPECIFIC FUNCTIONS
 void EPuckV1Driver::saveData(Logger& log) {
 
+    for(int i = 0; i<8 ; ++i) {
+        robot().proximity_sensors.ir[i] = prox_sensors_[i];
+    }
+
     log.addIn(log.file_eg, encoder_left_);
     log.addIn(log.file_ed, encoder_right_);
-    log.addIn(log.file_ir[0], prox_sensors_[0]);
-    log.addIn(log.file_ir[1], prox_sensors_[1]);
-    log.addIn(log.file_ir[2], prox_sensors_[2]);
-    log.addIn(log.file_ir[3], prox_sensors_[3]);
-    log.addIn(log.file_ir[4], prox_sensors_[4]);
-    log.addIn(log.file_ir[5], prox_sensors_[5]);
-    log.addIn(log.file_ir[6], prox_sensors_[6]);
-    log.addIn(log.file_ir[7], prox_sensors_[7]);
+    log.addIn(log.file_ir[0], robot().proximity_sensors.ir[0]);
+    log.addIn(log.file_ir[1], robot().proximity_sensors.ir[1]);
+    log.addIn(log.file_ir[2], robot().proximity_sensors.ir[2]);
+    log.addIn(log.file_ir[3], robot().proximity_sensors.ir[3]);
+    log.addIn(log.file_ir[4], robot().proximity_sensors.ir[4]);
+    log.addIn(log.file_ir[5], robot().proximity_sensors.ir[5]);
+    log.addIn(log.file_ir[6], robot().proximity_sensors.ir[6]);
+    log.addIn(log.file_ir[7], robot().proximity_sensors.ir[7]);
     /*
     log.addIn(log.file_p8, prox_sensors_[8]);
     log.addIn(log.file_p9, prox_sensors_[9]);
     */
 }
 
+void EPuckV1Driver::closeFilesIfConnectionLost() {
+    if (prox_sensors_prev_ ==  robot().proximity_sensors.ir) {
+        is_the_connection_lost_++;
+    }
+    prox_sensors_prev_ =  robot().proximity_sensors.ir ;
+
+    if(is_the_connection_lost_ == 3) {
+        log().CloseAll();
+    }
+}

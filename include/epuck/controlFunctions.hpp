@@ -30,47 +30,47 @@
 #include "Robot.hpp"
 
 /**** Derive robot pose from encoders and save it along with robot linear and angular velocities ****/
-Pose GetCurrPoseFromEncoders(RobotParameters rp, const Pose & prevRobPose, const int& EncL, const int& EncR, const int& prevEncL, const int& prevEncR, Logger& log);
+Pose getCurrPoseFromEncoders(RobotParameters rp, const Pose & prevRobPose, const int& EncL, const int& EncR, const int& prevEncL, const int& prevEncR, Logger& log);
 
 /**** Derive robot pose from vision (from barycenter of target) and save it ****/
-Pose GetCurrPoseFromVision(const cv::Point & baryctr, const float & theta, const float & areaPix, Logger& log);
+Pose getCurrPoseFromVision(const cv::Point & baryctr, const float & theta, const float & areaPix, Logger& log);
 
 
 /**** Load image from the disk ****/ //////////// NOT USED IN EPUCK-APP ////////////////////// 
-//cv::Mat LoadAndShowImageFromDisk(const std::string folderName, const int& cnt_it);
+//cv::Mat loadAndShowImageFromDisk(const std::string folderName, const int& cnt_it);
 
 /**** Load encoder measurements from logs on disk ****/ //////////// NOT USED IN EPUCK-APP ////////////////////// 
-// std::vector<int> LoadSensorLogs(const std::string folderName)
+// std::vector<int> loadSensorLogs(const std::string folderName)
 
 
 /**** Convert IR distances to points x y in robot frame, estimate line parameters y = mx +p in robot frame and then convert everything to world frame ****/
-void ConvertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld);
+void convertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld);
 
 /**** Draws a map with world frame and robot ****/
-void DrawMapWithRobot(RobotParameters rp, const Pose & rPoseEnc, const Pose & rPoseVis, const cv::Point2f ProxInWFr[10], const float mWall, const float pWall);
+void drawMapWithRobot(RobotParameters rp, const Pose & rPoseEnc, const Pose & rPoseVis, const cv::Point2f ProxInWFr[10], const float mWall, const float pWall);
 
 /**** Process image compute and draw barycenter ****/
-// cv::Point ProcessImageToGetBarycenter(cv::Mat& colRawImg, float & areaPix);
+cv::Point processImageToGetBarycenter(cv::Mat& colRawImg, float & areaPix);
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetRobotVelocities(RobotParameters rp, const float& vel, const float& omega, double& robVelLeft, double& robVelRight);
+void setRobotVelocities(RobotParameters rp, const float& vel, const float& omega, double& robVelLeft, double& robVelRight);
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetVelocities(const float& vel, const float& omega, double& robVelLeft, double& robVelRight);
+void setVelocities(Robot& robot);
 
 // control robot using images from the camera
-void ControlRobotWithVisualServoing(const cv::Point & baryc, float & vel, float & omega);
+void controlRobotWithVisualServoing(const cv::Point & baryc, float & vel, float & omega);
 
 // make robot follow a wall using infrared measurements for ten seconds
-void ControlRobotToFollowWall(float &vel, float &omega);
+void controlRobotToFollowWall(float &vel, float &omega);
 
 //using IR calibration convert the IR values to metric distances
-void InfraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log);
+void infraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log);
 
 //using the robot parameters, map metric distances to the robot frame
-void MetricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall);
+void metricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall);
 
 /**** Set commands to the wheel motors for 10 seconds****/
-void setWheelCommands(Robot& robot, const int& speedLeft, const int& speedRight);
+void setWheelCommands(Robot& robot);

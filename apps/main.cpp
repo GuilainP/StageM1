@@ -99,18 +99,18 @@ int main(int argc, char** argv) {
         //control robot
         if (c == setWheelCmd) {
             // Euh , la fonction ici ne sers pas à grand chose
-            setWheelCommands(robot, robot.wheels_command.left_velocity, robot.wheels_command.right_velocity); // set commmands to wheels
+            setWheelCommands(robot); // set commmands to wheels
         } else if (c == setVel) {
-            SetVelocities(robot.desired_velocity, robot.desired_angle, robot.wheels_command.left_velocity, robot.wheels_command.right_velocity); // set operational velocities to robot to be done by students
+            setVelocities(robot); // set operational velocities to robot to be done by students
         } 
     /*  else if (c == setRobVel) {
-            SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
+            setRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
         } else if (c == followWall) {
-            ControlRobotToFollowWall(startTime, (float)robot().desired_velocity, (float)robot().desired_angle); // make robot follow a wall using infrared measurements
-            SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
+            controlRobotToFollowWall(startTime, (float)robot().desired_velocity, (float)robot().desired_angle); // make robot follow a wall using infrared measurements
+            setRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
         } else if (c == visServo) {
-            ControlRobotWithVisualServoing(baryc, (float)robot().desired_velocity, (float)robot().desired_angle); // control robot using images from the camera
-            SetRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
+            controlRobotWithVisualServoing(baryc, (float)robot().desired_velocity, (float)robot().desired_angle); // control robot using images from the camera
+            setRobotVelocities(robot().parameters, startTime, robot().desired_velocity, robot().desired_angle, MotorCommand_); // send operational velocities to robot
         }
     */
 

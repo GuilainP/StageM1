@@ -2,19 +2,15 @@
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetVelocities(const float& vel, const float& omega, double& robVelLeft, double& robVelRight) {
-    std::cout << "The required robot velocities are v "<< vel <<" w "<< omega <<"\n\n\n";
+void setVelocities(Robot& robot) {
+    std::cout << "The required robot velocities are v "<< robot.desired_velocity <<" w "<< robot.desired_angle <<"\n\n\n";
 
     // Commands to be sent to the left and right wheels
-    //  robVelLeft && robVelRight ??
-
-    //int speedG;
-    //int speedD;
     
-    std::cout << "SetRobotVelocities wheel speeds are "<< robVelLeft << " " << robVelRight;
+    std::cout << "SetRobotVelocities wheel speeds are "<< robot.wheels_command.left_velocity << " " << robot.wheels_command.right_velocity;
 }
 /**** Convert IR distances to points x y in robot frame, estimate line parameters y = mx +p in robot frame and then convert everything to world frame ****/
-void ConvertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld) {
+void convertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld) {
     cv::Point2f ProxInRobFrame[10];
     for (int i = 0; i < 10; i++) {
         std::cout << "the angle of IR number " << i << " is " << rp.theta[i] <<" and the distance is " << dist[i] << std::endl;
@@ -32,7 +28,7 @@ void ConvertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], c
     pWorld = 0.05;
 }
 /**** Derive robot pose from encoders and save it along with robot linear and angular velocities ****/
-Pose GetCurrPoseFromEncoders(RobotParameters rp, const Pose & prevRobPose, const int& EncL, const int& EncR, const int& prevEncL, const int& prevEncR, Logger& log){
+Pose getCurrPoseFromEncoders(RobotParameters rp, const Pose & prevRobPose, const int& EncL, const int& EncR, const int& prevEncL, const int& prevEncR, Logger& log){
     std::cout << "Left Encoder : "<< EncL <<" ";
     std::cout << "Right Encoder : "<< EncR <<" \n";
     const float encoderFactor = 0.0072;//with bias
@@ -69,7 +65,7 @@ Pose GetCurrPoseFromEncoders(RobotParameters rp, const Pose & prevRobPose, const
 }
 
 /**** Derive robot pose from vision (from barycenter of target) and save it ****/
-Pose GetCurrPoseFromVision(const cv::Point & baryctr, const float & theta, const float & areaPix, Logger& log){
+Pose getCurrPoseFromVision(const cv::Point & baryctr, const float & theta, const float & areaPix, Logger& log){
     Pose curRobPose;
     curRobPose.setPose(.32, 0., M_PI);//TODOM2
 
@@ -84,7 +80,7 @@ Pose GetCurrPoseFromVision(const cv::Point & baryctr, const float & theta, const
 }
 /**** Show image from the robot camera and save it on the disk ****/ 
 /*
-cv::Mat LoadAndShowImageFromDisk(const std::string folderName, const int& cnt_it) {
+cv::Mat loadAndShowImageFromDisk(const std::string folderName, const int& cnt_it) {
     //load the image from the disk
     char imgNameIteration[30];
     sprintf(imgNameIteration, "images/image%04d.jpg", cnt_it);
@@ -99,7 +95,7 @@ cv::Mat LoadAndShowImageFromDisk(const std::string folderName, const int& cnt_it
 
 /**** Load encoder measurements from logs on disk ****/ //////////// NOT USED IN EPUCK-APP //////////////////////
 /*
-std::vector<int> LoadSensorLogs(const std::string folderName) {
+std::vector<int> loadSensorLogs(const std::string folderName) {
     std::vector<int> sensData;
     //load the data from the disk
     FILE *sen;
@@ -118,7 +114,7 @@ std::vector<int> LoadSensorLogs(const std::string folderName) {
 }
 */
 
-void DrawMapWithRobot(RobotParameters rp, const Pose & rPoseEnc, const Pose & rPoseVis, const cv::Point2f ProxInWorldFrame[10], const float mWall, const float pWall){
+void drawMapWithRobot(RobotParameters rp, const Pose & rPoseEnc, const Pose & rPoseVis, const cv::Point2f ProxInWorldFrame[10], const float mWall, const float pWall){
     cv::Mat mapImg;
     static const int cmInPixels = 15;
     static const int xMaxInCm = 60;
@@ -201,7 +197,7 @@ void DrawMapWithRobot(RobotParameters rp, const Pose & rPoseEnc, const Pose & rP
     cv::imshow( "map", mapImg);                // Show the image inside it
 }
 
-cv::Point ProcessImageToGetBarycenter(cv::Mat& colRawImg, float & areaPix) {
+cv::Point processImageToGetBarycenter(cv::Mat& colRawImg, float & areaPix) {
     struct timeval start, end;
     gettimeofday(&start, NULL); //get start time of function
     cv::Mat greyImg;
@@ -229,13 +225,13 @@ cv::Point ProcessImageToGetBarycenter(cv::Mat& colRawImg, float & areaPix) {
     gettimeofday(&end, NULL); //get end time
     double time_spent = (end.tv_sec - start.tv_sec) * 1e3 + (end.tv_usec -
                                                              start.tv_usec) * 1e-3;
-    std::cout << "ProcessImageToGetBarycenter took " << time_spent << " ms\n"; //print time spetn for processing
+    std::cout << "processImageToGetBarycenter took " << time_spent << " ms\n"; //print time spetn for processing
     return(targetBarycenter);
 }
 
 /**** Send commands (speed_L, speed_R) to motors in order to realize robot
  * velocities (v, w) for 10 seconds ****/
-void SetRobotVelocities(RobotParameters rp, const float& vel, const float& omega, double& robVelLeft, double& robVelRight) {
+void setRobotVelocities(RobotParameters rp, const float& vel, const float& omega, double& robVelLeft, double& robVelRight) {
     std::cout << "The required robot velocities are v " << vel << " w " << omega << "\n\n\n";
    
     // Commands to be sent to the left and right wheels
@@ -251,14 +247,14 @@ void SetRobotVelocities(RobotParameters rp, const float& vel, const float& omega
 }
 
 // control robot using images from the camera
-void ControlRobotWithVisualServoing(const cv::Point &baryc, float &vel, float &omega) {
+void controlRobotWithVisualServoing(const cv::Point &baryc, float &vel, float &omega) {
     //TODOM2
     //calculate vel and omega given baryc
     vel = 0;
     omega = 0;
 }
 // make robot follow a wall using infrared measurements for ten seconds
-void ControlRobotToFollowWall(float &vel, float &omega) {
+void controlRobotToFollowWall(float &vel, float &omega) {
     // replace the lines below with commands v and w needed to follow wall
     // from xA, yA, xB et yB
     // Load these variables from files xA.txt etc...
@@ -272,7 +268,7 @@ void ControlRobotToFollowWall(float &vel, float &omega) {
     omega = 0;
 
 }
-void InfraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log) {
+void infraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log) {
     // infrared values
     for (int i = 0; i < 10; i++) {
         std::cout << "IRed " << i << " : " <<  ProxS[i] << " ";
@@ -310,7 +306,7 @@ void InfraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], flo
     log.addIn(log.file_distances, dist[9]);
 
 }
-void MetricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall) {
+void metricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall) {
     cv::Point2f ProxInRobFrame[10];
     for (int i = 0; i < 10; i++) {
         ProxInRobFrame[i].x = (dist[i] + rp.robot_radius) * cos(rp.theta[i]);
@@ -326,7 +322,7 @@ void MetricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10
 }
 
 /**** Set commands to the wheel motors for 10 seconds****/
-void setWheelCommands(Robot& robot, const int& speedLeft, const int& speedRight){
-    robot.wheels_command.left_velocity = speedLeft;
-    robot.wheels_command.right_velocity = speedRight;
+void setWheelCommands(Robot& robot){
+    //robot.wheels_command.left_velocity = speedLeft;
+    //robot.wheels_command.right_velocity = speedRight;
 }

@@ -84,21 +84,24 @@ private:
     void sendMotorAndLEDCommandToRobot(const char MotorCmd[15]);
     void closeSocket(int NOM_SOCKET);
     void openCommandSendingSocket(const std::string& epuck_ip);
+    void closeFilesIfConnectionLost(); // use to identified the state of the connection
 
     /* Variables of main thread */
 
+    int is_the_connection_lost_;
     typedef int SOCKET;
     SOCKET camera_socket_, command_sending_socket_, sensor_receiving_socket_;
     char all_sensors_[100]; // Buffer de reception des capteurs
     int encoder_left_, encoder_right_, prev_encoder_left_, prev_encoder_right_;
     int prox_sensors_[10];
+    std::array<double, 8> prox_sensors_prev_ ; // use to identified the state of the connection
     bool stop_threads_;
 
     struct timeval startTime, curTime, prevTime;
     double timeSinceStart;
 
     char MotorCommand_[15];      // command for the two motors
-    cv::Mat robImg_;
+    cv::Mat rob_img_;
     Pose prev_pose_from_enc_, cur_pose_from_enc_, prev_pose_from_vis_, cur_pose_from_vis_, init_pose_;
 
     int speed_left_, speed_right_;
