@@ -171,7 +171,7 @@ bool EPuckV2Driver::init() {
 	
 	command_[0] = 0x80;
 	command_[1] = 0b11;	// 0b10 Sensors enabled , 0b01 Image enabled
-	command_[2] = 1;		// Calibrate proximity sensors.
+	command_[2] = 1;//1;		// Calibrate proximity sensors.
 	command_[3] = 0;		// left motor LSB
 	command_[4] = 0;		// left motor MSB
 	command_[5] = 0;		// right motor LSB
@@ -435,16 +435,14 @@ void EPuckV2Driver::read() {
 };
 
 void EPuckV2Driver::sendCmd() {
-	bool on = true;
 
-    //std::cout << "send V1\n";
 	command_[0] = 0x80;
 	command_[1] = 0b11;	// 0b10 Sensors enabled , 0b01 Image enabled
 	command_[2] = 0;		// Calibrate proximity sensors.
-	command_[3] = (!on)*robot().wheels_command.left_velocity;		// left motor LSB
-	command_[4] = (on)*robot().wheels_command.left_velocity;		// left motor MSB
-	command_[5] = (!on)*robot().wheels_command.right_velocity;		// right motor LSB
-	command_[6] = (on)*robot().wheels_command.right_velocity;		// right motor MSB
+	command_[3] = ((int)robot().wheels_command.left_velocity)&0xFF;		// left motor LSB
+	command_[4] = ((int)robot().wheels_command.left_velocity>>8)&0xFF;		// left motor MSB
+	command_[5] = ((int)robot().wheels_command.right_velocity)&0xFF;	// right motor LSB
+	command_[6] = ((int)robot().wheels_command.right_velocity>>8)&0xFF;	// right motor MSB
 	command_[7] = 0b0; //0b111111;	// lEDs
 	command_[8] = 0;		// LED2 red
 	command_[9] = 0;		// LED2 green
