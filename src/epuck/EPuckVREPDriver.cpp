@@ -26,7 +26,7 @@ bool EPuckVREPDriver::init() {
     client_id_ = simxStart((simxChar*)robot().ip.c_str(), 19997, true, true, 2000, 5);
     std::cout << "clientID = " << client_id_ << std::endl;
 
-    start_time_ = std::chrono::high_resolution_clock::now();
+    start_time = std::chrono::high_resolution_clock::now();
 
     if (client_id_ == -1) {
         std::cout << ("Could not connect to V-REP remote API server") << std::endl;
@@ -144,15 +144,15 @@ EPuckVREPDriver::~EPuckVREPDriver() {
 
 void EPuckVREPDriver::printSensors() {
     dataToRobot();
-    cur_time_ = std::chrono::high_resolution_clock::now();
+    cur_time = std::chrono::high_resolution_clock::now();
 
-    time_since_start_ = cur_time_ - start_time_ ;
+    time_since_start = cur_time - start_time;
 
     std::cout << COLOR_COUT_BLUE << "Iteration N"<< cnt_iter << "\n" << COLOR_COUT_RESET
               << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
               << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << "\n"
-              << "TimeSinceStart  : " << time_since_start_.count() << "s" << std::endl;
+              << "TimeSinceStart  : " << time_since_start.count() << "s" << std::endl;
 
 
     if(detection_state_ir_[0]!=0) {

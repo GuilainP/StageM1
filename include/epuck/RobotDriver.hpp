@@ -56,6 +56,10 @@ protected:
     int cnt_iter;
     char** argv;
 
+    // time variables
+    std::chrono::_V2::system_clock::time_point start_time, cur_time, prev_time;
+    std::chrono::duration<double> time_since_start, time_iteration;
+
 private:
     Robot& robot_;
     Logger log_; 
@@ -154,10 +158,6 @@ private:
 
     unsigned char image_[160*120*2];
 
-    // time variables
-    std::chrono::_V2::system_clock::time_point start_time_, cur_time_, prev_time_;
-    std::chrono::duration<double> time_since_start_, time_iteration_;
-
     // variable use to calculate wheels speed
     double left_steps_diff_avg_,right_steps_diff_avg_, time_ten_iter_;
 
@@ -222,10 +222,6 @@ private:
 
     void printSensors();
     void dataToRobot();
-
-    // time variables
-    std::chrono::_V2::system_clock::time_point start_time_, cur_time_;
-    std::chrono::duration<double> time_since_start_;
     
     int client_id_, ping_time_;
     int epuck_handle_;

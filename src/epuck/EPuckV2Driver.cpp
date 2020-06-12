@@ -46,8 +46,6 @@ EPuckV2Driver::EPuckV2Driver(Robot& robot, char** arg) : RobotDriver(robot, arg)
 		robot.wheels_command.right_velocity = std::stod(argv[4]);
 	}
 
-	start_time_ = std::chrono::high_resolution_clock::now();
-
 }
 
 EPuckV2Driver::~EPuckV2Driver() {
@@ -195,14 +193,14 @@ bool EPuckV2Driver::init() {
 	command_[20] = 0;	// speaker   
 	expected_recv_packets_ = 1;
 
-	auto time_ = std::chrono::high_resolution_clock::now();
-
 
 	bytes_sent_ = 0;
 	while(bytes_sent_ < sizeof(command_)) {
 		bytes_sent_ += send(fd_, (char *)&command_[bytes_sent_], sizeof(command_)-bytes_sent_, 0);
 	}
 	command_[2] = 0; // Stop proximity calibration.
+
+	start_time = std::chrono::high_resolution_clock::now();
 
 	return true;
 };
@@ -501,14 +499,14 @@ void EPuckV2Driver::printSensors() {
 	positionDataCorrection();
 	proxDataRawValuesToMeters();
 
-	cur_time_ = std::chrono::high_resolution_clock::now();
-	time_since_start_ = cur_time_ - start_time_;
+	cur_time = std::chrono::high_resolution_clock::now();
+	time_since_start = cur_time - start_time;
 
     std::cout << COLOR_COUT_BLUE << "Iteration N "<< cnt_iter << "\n" << COLOR_COUT_RESET
               << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
               << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << "\n"
-			  << "TimeSinceStart  : " << time_since_start_.count() << "s" << std::endl;
+			  << "TimeSinceStart  : " << time_since_start.count() << "s" << std::endl;
 
 	if(robot().proximity_sensors.ir[0] > 0) {
 		std::cout << "IR0 : " << robot().proximity_sensors.ir[0] << "\n";
@@ -642,11 +640,11 @@ void EPuckV2Driver::positionDataCorrection() {
 	robot().wheels_state.left_position= wheelIntervalAdjustment(motor_position_data_correct_[0]);//%1000)*(2*M_PI/1000);
 	robot().wheels_state.right_position= wheelIntervalAdjustment(motor_position_data_correct_[1]); //(motor_position_data_correct_[1]%1000)*(2*M_PI/1000);
 
-	cur_time_ = std::chrono::high_resolution_clock::now();
+	cur_time = std::chrono::high_resolution_clock::now();
 
-	time_iteration_ = cur_time_ - prev_time_ ;
+	time_iteration = cur_time - prev_time ;
 
-	time_ten_iter_ += time_iteration_.count();
+	time_ten_iter_ += time_iteration.count();
 	left_steps_diff_avg_ += left_steps_diff_;
 	right_steps_diff_avg_ += right_steps_diff_;
 
@@ -658,7 +656,7 @@ void EPuckV2Driver::positionDataCorrection() {
 		time_ten_iter_ = 0;
 	}
 
-	prev_time_ = std::chrono::high_resolution_clock::now();
+	prev_time = std::chrono::high_resolution_clock::now();
 
 
 }
