@@ -26,6 +26,8 @@ bool EPuckVREPDriver::init() {
     client_id_ = simxStart((simxChar*)robot().ip.c_str(), 19997, true, true, 2000, 5);
     std::cout << "clientID = " << client_id_ << std::endl;
 
+    start_time_ = std::chrono::high_resolution_clock::now();
+
     if (client_id_ == -1) {
         std::cout << ("Could not connect to V-REP remote API server") << std::endl;
         simxFinish(client_id_);
@@ -43,6 +45,9 @@ bool EPuckVREPDriver::init() {
 
         simxGetObjectHandle(client_id_, "ePuck_rightJoint", &right_joint_handle_, simx_opmode_blocking);
         simxGetObjectHandle(client_id_, "ePuck_leftJoint", &left_joint_handle_, simx_opmode_blocking);
+
+        simxGetObjectHandle(client_id_, "ePuck_rightWheel", &right_wheel_handle_, simx_opmode_blocking);
+        simxGetObjectHandle(client_id_, "ePuck_leftWheel", &left_wheel_handle_, simx_opmode_blocking);
 
         simxGetObjectHandle(client_id_, "ePuck_camera", &vision_handle_, simx_opmode_blocking);
 
@@ -72,8 +77,8 @@ bool EPuckVREPDriver::init() {
         simxGetJointPosition(client_id_, left_joint_handle_, &left_joint_position_, simx_opmode_streaming);
         simxGetJointPosition(client_id_, right_joint_handle_, &right_joint_position_, simx_opmode_streaming);
 
-        simxGetObjectVelocity(client_id_, left_joint_handle_, NULL, left_joint_velocity_, simx_opmode_streaming);
-        simxGetObjectVelocity(client_id_, right_joint_handle_, NULL, right_joint_velocity_, simx_opmode_streaming);
+        simxGetObjectVelocity(client_id_, left_wheel_handle_, NULL, left_joint_velocity_, simx_opmode_streaming);
+        simxGetObjectVelocity(client_id_, right_wheel_handle_, NULL, right_joint_velocity_, simx_opmode_streaming);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         
@@ -103,14 +108,10 @@ void EPuckVREPDriver::read() {
     simxGetJointPosition(client_id_, left_joint_handle_, &left_joint_position_, simx_opmode_buffer);
     simxGetJointPosition(client_id_, right_joint_handle_, &right_joint_position_, simx_opmode_buffer);
 
-    simxGetObjectVelocity(client_id_, left_joint_handle_, NULL, left_joint_velocity_, simx_opmode_buffer);
-    simxGetObjectVelocity(client_id_, right_joint_handle_, NULL, right_joint_velocity_, simx_opmode_buffer);
-
-    
-
+    simxGetObjectVelocity(client_id_, left_wheel_handle_, NULL, left_joint_velocity_, simx_opmode_buffer);
+    simxGetObjectVelocity(client_id_, right_wheel_handle_, NULL, right_joint_velocity_, simx_opmode_buffer);
 
     simxGetPingTime(client_id_, &ping_time_);
-
 
     printSensors();
 }
@@ -143,10 +144,15 @@ EPuckVREPDriver::~EPuckVREPDriver() {
 
 void EPuckVREPDriver::printSensors() {
     dataToRobot();
+    cur_time_ = std::chrono::high_resolution_clock::now();
+
+    time_since_start_ = cur_time_ - start_time_ ;
+
     std::cout << COLOR_COUT_BLUE << "Iteration N"<< cnt_iter << "\n" << COLOR_COUT_RESET
               << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
               << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
-              << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
+              << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << "\n"
+              << "TimeSinceStart  : " << time_since_start_.count() << "s" << std::endl;
 
 
     if(detection_state_ir_[0]!=0) {
@@ -240,12 +246,10 @@ void EPuckVREPDriver::dataToRobot() {
         else {
             robot().proximity_sensors.ir[i] = -1;
         }
-
     }
 
-
-    robot().wheels_state.left_velocity = left_joint_velocity_[0];
-    robot().wheels_state.right_velocity= right_joint_velocity_[0];
+    robot().wheels_state.left_velocity = (-1)*left_joint_velocity_[0];
+    robot().wheels_state.right_velocity= (-1)*right_joint_velocity_[0];
 
     robot().wheels_state.left_position = left_joint_position_;
     robot().wheels_state.right_position = right_joint_position_;
@@ -254,6 +258,4 @@ void EPuckVREPDriver::dataToRobot() {
     robot().current_pose.y = epuck_position_[1];
     robot().current_pose.th = euler_angles_[1];
 
-
-    
 }

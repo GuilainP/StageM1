@@ -36,7 +36,7 @@ EPuckV1Driver::~EPuckV1Driver() {
     stop_threads_ = true;
     // Send a zero velocity command before exiting
     setWheelCommands(robot());
-    sendMotorAndLEDCommandToRobot(MotorCommand_);
+    sendMotorAndLEDCommandToRobot(motor_command_);
     std::cout << "All good, mate\n";
 
     pthread_join(id_camera_reception_thread_, NULL);
@@ -67,7 +67,7 @@ bool EPuckV1Driver::init() {
     std::cout << "\nINIT \n";
 
     cnt_iter = 1; // to get the current iteration
-    gettimeofday(&startTime, NULL); // get starting time
+    gettimeofday(&start_time_, NULL); // get starting time
     init_pose_.setPose(.32, 0., M_PI);
 
     return true;
@@ -79,16 +79,16 @@ void EPuckV1Driver::read() {
     std::cout << "\033[1;36m";//write in bold cyan
     std::cout << "\nSTART ITERATION " << cnt_iter <<" \n";
     std::cout << "\033[0m";//reset color
-    gettimeofday(&prevTime, NULL);
+    gettimeofday(&prev_time_, NULL);
     //show and save image
     if (camera_active_ == true) {
         rob_img_ = showAndSaveRobotImage(img_data_.msg, cnt_iter);
     }
-    gettimeofday(&curTime, NULL);
-    timeSinceStart = (curTime.tv_sec - prevTime.tv_sec) * 1e3 + (curTime.tv_usec - prevTime.tv_usec) * 1e-3;
-    //timeSinceStart = ((curTime.tv_sec * 1000000 + curTime.tv_usec) - (prevTime.tv_sec * 1000000 + prevTime.tv_usec)) / 1000;
-    std::cout << "IP\ttimeSinceStart = " << timeSinceStart << " ms\n";
-    gettimeofday(&prevTime, NULL);
+    gettimeofday(&cur_time_, NULL);
+    time_since_start_ = (cur_time_.tv_sec - prev_time_.tv_sec) * 1e3 + (cur_time_.tv_usec - prev_time_.tv_usec) * 1e-3;
+    //time_since_start_ = ((cur_time_.tv_sec * 1000000 + cur_time_.tv_usec) - (prev_time_.tv_sec * 1000000 + prev_time_.tv_usec)) / 1000;
+    std::cout << "IP\ttimeSinceStart = " << time_since_start_ << " ms\n";
+    gettimeofday(&prev_time_, NULL);
 
 
     if(cnt_iter == 1) {
@@ -126,30 +126,29 @@ void EPuckV1Driver::sendCmd() {
     /////////////////////////
 
     // Sends the command to the epuck motors
-    struct timeval curTime;
-    gettimeofday(&curTime, NULL);
-    long int timeSinceStart =
-        ((curTime.tv_sec * 1000000 + curTime.tv_usec) -
-         (startTime.tv_sec * 1000000 + startTime.tv_usec)) /
+    gettimeofday(&cur_time_, NULL);
+    time_since_start_ =
+        ((cur_time_.tv_sec * 1000000 + cur_time_.tv_usec) -
+         (start_time_.tv_sec * 1000000 + start_time_.tv_usec)) /
         1000;
-    std::cout << "timeSinceStart = " << timeSinceStart << " ms\n";
+    std::cout << "timeSinceStart = " << time_since_start_ << " ms\n";
 
-    //if (timeSinceStart < 10000) {
+    //if (time_since_start_ < 10000) {
         // Sends the command to the epuck motors
-        sprintf(MotorCommand_, "D,%d,%d", (int)robot().wheels_command.left_velocity, (int)robot().wheels_command.right_velocity);
+        sprintf(motor_command_, "D,%d,%d", (int)robot().wheels_command.left_velocity, (int)robot().wheels_command.right_velocity);
     //} else {
-    //    sprintf(MotorCommand_, "D,%d,%d", 0, 0);
+    //    sprintf(motor_command_, "D,%d,%d", 0, 0);
     //}
     
-    sendMotorAndLEDCommandToRobot(MotorCommand_);
+    sendMotorAndLEDCommandToRobot(motor_command_);
 
     cnt_iter++;
 
-    gettimeofday(&curTime, NULL);
-    timeSinceStart = (curTime.tv_sec - prevTime.tv_sec) * 1e3 + (curTime.tv_usec - prevTime.tv_usec) * 1e-3;
+    gettimeofday(&cur_time_, NULL);
+    time_since_start_ = (cur_time_.tv_sec - prev_time_.tv_sec) * 1e3 + (cur_time_.tv_usec - prev_time_.tv_usec) * 1e-3;
 
-    std::cout << "proc\ttimeSinceStart = " << timeSinceStart <<" ms\n";
-	gettimeofday(&prevTime, NULL);
+    std::cout << "proc\ttimeSinceStart = " << time_since_start_ <<" ms\n";
+	gettimeofday(&prev_time_, NULL);
 };
 
 // Empty (not needed in EPuckV1Driver)

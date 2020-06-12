@@ -76,7 +76,6 @@ private:
     void initSocketOpening(const std::string& epuck_ip);
     void openCameraSocket();
     void openSensorReceivingSocket();
-    //void setWheelCommands(struct timeval startTime, const int& speed_L, const int& speed_R, char MotorCmd[15]);
     void saveData(Logger& log);
     void* cameraReceptionThread(void* arg);
     void splitSensorMeasures();
@@ -97,10 +96,10 @@ private:
     std::array<double, 8> prox_sensors_prev_ ; // use to identified the state of the connection
     bool stop_threads_;
 
-    struct timeval startTime, curTime, prevTime;
-    double timeSinceStart;
+    struct timeval start_time_, cur_time_, prev_time_;
+    double time_since_start_;
 
-    char MotorCommand_[15];      // command for the two motors
+    char motor_command_[15];      // command for the two motors
     cv::Mat rob_img_;
     Pose prev_pose_from_enc_, cur_pose_from_enc_, prev_pose_from_vis_, cur_pose_from_vis_, init_pose_;
 
@@ -144,9 +143,6 @@ public:
     
     void getVisionSensor(Robot& robot) override ;
     
-    
-
-
 private:
     void printSensors();
     void closeConnection();
@@ -157,6 +153,13 @@ private:
     void odometry();
 
     unsigned char image_[160*120*2];
+
+    // time variables
+    std::chrono::_V2::system_clock::time_point start_time_, cur_time_, prev_time_;
+    std::chrono::duration<double> time_since_start_, time_iteration_;
+
+    // variable use to calculate wheels speed
+    double left_steps_diff_avg_,right_steps_diff_avg_, time_ten_iter_;
 
     // Communication variables
     struct sockaddr_in robot_addr_;
@@ -215,23 +218,26 @@ public:
     void sendCmd() override;
     void getVisionSensor(Robot& robot) override ;
 
-    void setVelocity(double, double);
-
-
 private:
 
     void printSensors();
     void dataToRobot();
+
+    // time variables
+    std::chrono::_V2::system_clock::time_point start_time_, cur_time_;
+    std::chrono::duration<double> time_since_start_;
     
     int client_id_, ping_time_;
     int epuck_handle_;
     int right_joint_handle_, left_joint_handle_;
+    int right_wheel_handle_, left_wheel_handle_;
     int prox_sensors_handle_[8];
     int vision_handle_;
     int res_[2];
     float epuck_position_[3];
     float left_joint_position_, right_joint_position_;
     float left_joint_velocity_[3], right_joint_velocity_[3];
+    float left_joint_lin_[3], right_joint_lin_[3];
     float euler_angles_[3];
     uint8_t detection_state_ir_[8];
     float detected_point_ir_[8][3];

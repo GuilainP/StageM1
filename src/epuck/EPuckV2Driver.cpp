@@ -35,6 +35,7 @@ EPuckV2Driver::EPuckV2Driver(Robot& robot, char** arg) : RobotDriver(robot, arg)
 	left_steps_diff_ = 0, right_steps_diff_ = 0;
     left_steps_prev_ = 0, right_steps_prev_ = 0;
     left_steps_raw_prev_ = 0, right_steps_raw_prev_ = 0;
+	left_steps_diff_avg_ = 0, right_steps_diff_avg_ = 0, time_ten_iter_ = 0; 
 
     overflow_count_left_ = 0, overflow_count_right_ = 0;
     gyro_offset_[0]=0, gyro_offset_[1]=0, gyro_offset_[2]=0; // Used if making an initial calibration of the gyro.
@@ -44,6 +45,8 @@ EPuckV2Driver::EPuckV2Driver(Robot& robot, char** arg) : RobotDriver(robot, arg)
 		robot.wheels_command.left_velocity = std::stod(argv[3]);
 		robot.wheels_command.right_velocity = std::stod(argv[4]);
 	}
+
+	start_time_ = std::chrono::high_resolution_clock::now();
 
 }
 
@@ -191,6 +194,9 @@ bool EPuckV2Driver::init() {
 	command_[19] = 0;	// LED8 blue
 	command_[20] = 0;	// speaker   
 	expected_recv_packets_ = 1;
+
+	auto time_ = std::chrono::high_resolution_clock::now();
+
 
 	bytes_sent_ = 0;
 	while(bytes_sent_ < sizeof(command_)) {
@@ -494,13 +500,15 @@ void EPuckV2Driver::getVisionSensor(Robot& robot) {
 void EPuckV2Driver::printSensors() {
 	positionDataCorrection();
 	proxDataRawValuesToMeters();
-	
+
+	cur_time_ = std::chrono::high_resolution_clock::now();
+	time_since_start_ = cur_time_ - start_time_;
 
     std::cout << COLOR_COUT_BLUE << "Iteration N "<< cnt_iter << "\n" << COLOR_COUT_RESET
               << "ePuck location :  x : " << robot().current_pose.x << ", y : " << robot().current_pose.y << ", th : " << robot().current_pose.th << "\n"
-              << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n";
-              //<< "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << std::endl;
-
+              << "Joint position [rad] :  Left : " << robot().wheels_state.left_position << ", Right : " << robot().wheels_state.right_position << "\n"
+              << "Speed [rad/s]   : Left : "  << robot().wheels_state.left_velocity << ", Right : " << robot().wheels_state.right_velocity << "\n"
+			  << "TimeSinceStart  : " << time_since_start_.count() << "s" << std::endl;
 
 	if(robot().proximity_sensors.ir[0] > 0) {
 		std::cout << "IR0 : " << robot().proximity_sensors.ir[0] << "\n";
@@ -566,10 +574,10 @@ void EPuckV2Driver::printSensors() {
 
     log().addIn(log().file_epuck_left_wheel_position, robot().wheels_state.left_position);
     log().addIn(log().file_epuck_right_wheel_position, robot().wheels_state.right_position);
-/*
+
     log().addIn(log().file_epuck_left_wheel_velocity, robot().wheels_state.left_velocity);
     log().addIn(log().file_epuck_right_wheel_velocity, robot().wheels_state.right_velocity);
-*/
+
 }
 
 void EPuckV2Driver::proxDataRawValuesToMeters() {
@@ -585,6 +593,7 @@ void EPuckV2Driver::proxDataRawValuesToMeters() {
 
 
 void EPuckV2Driver::positionDataCorrection() {
+
 	if((left_steps_raw_prev_>0) && (motor_steps_[0]<0) && (abs(motor_steps_[0]-left_steps_raw_prev_)>30000)) {     // Overflow detected (positive).
 		overflow_count_left_++;
 	}
@@ -632,7 +641,26 @@ void EPuckV2Driver::positionDataCorrection() {
 	robot().current_pose.th = thetaIntervalAdjustment(theta_);
 	robot().wheels_state.left_position= wheelIntervalAdjustment(motor_position_data_correct_[0]);//%1000)*(2*M_PI/1000);
 	robot().wheels_state.right_position= wheelIntervalAdjustment(motor_position_data_correct_[1]); //(motor_position_data_correct_[1]%1000)*(2*M_PI/1000);
-	
+
+	cur_time_ = std::chrono::high_resolution_clock::now();
+
+	time_iteration_ = cur_time_ - prev_time_ ;
+
+	time_ten_iter_ += time_iteration_.count();
+	left_steps_diff_avg_ += left_steps_diff_;
+	right_steps_diff_avg_ += right_steps_diff_;
+
+	if (cnt_iter%10 == 0){
+		robot().wheels_state.left_velocity = (left_steps_diff_avg_/time_ten_iter_)/robot().parameters.wheel_radius; 
+		robot().wheels_state.right_velocity = (right_steps_diff_avg_/time_ten_iter_)/robot().parameters.wheel_radius;
+		left_steps_diff_avg_ = 0;
+		right_steps_diff_avg_ = 0;
+		time_ten_iter_ = 0;
+	}
+
+	prev_time_ = std::chrono::high_resolution_clock::now();
+
+
 }
 
 double EPuckV2Driver::thetaIntervalAdjustment(double val){
