@@ -238,7 +238,6 @@ private:
     uint8_t detection_state_ir_[8];
     float detected_point_ir_[8][3];
     uint8_t* sim_image_;
-    int ajouter_;
     
     double minl_,maxl_,minr_,maxr_;
 };

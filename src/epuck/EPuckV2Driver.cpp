@@ -220,7 +220,7 @@ void EPuckV2Driver::read() {
 			closeConnection();
 			if(init() == false ) {
 				std::cerr << "Lost connection with the robot" << std::endl;
-				log().CloseAll();
+				log().closeAll();
 				exit(1);
 			} else {
 				return; // Wait for the next sensor_ request
@@ -236,7 +236,7 @@ void EPuckV2Driver::read() {
 						closeConnection();
 						if(init() == false) {
 							std::cerr << "Lost connection with the robot" << std::endl;
-							log().CloseAll();
+							log().closeAll();
 							exit(1);
 						} else {
 							return; // Wait for the next sensor_ request
@@ -267,7 +267,7 @@ void EPuckV2Driver::read() {
 						closeConnection();
 						if(init() == false ) {
 							std::cerr << "Lost connection with the robot" << std::endl;
-							log().CloseAll();
+							log().closeAll();
 							exit(1);
 						} else {
 							return; // Wait for the next sensor_ request

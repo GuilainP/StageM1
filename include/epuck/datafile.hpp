@@ -11,7 +11,7 @@ public:
     void folderGeneration(); // folder name (current time)
     void fileGeneration();
     void addIn(std::ofstream& file , double value, std::string endline=""); // add data to file (end line)
-    void CloseAll();
+    void closeAll();
 
     std::string folder_;
 
@@ -41,8 +41,4 @@ public:
 
     std::ofstream file_eg;
     std::ofstream file_ed;
-    std::ofstream file_p8;
-    std::ofstream file_p9;
-
-    
 };

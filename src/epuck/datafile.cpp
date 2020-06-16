@@ -13,10 +13,10 @@ Logger::Logger() {
 }
 
 Logger::~Logger() { 
-    CloseAll();
+    closeAll();
 }
 
-void Logger::CloseAll() {
+void Logger::closeAll() {
 
     file_epuck_pose[0].close();
     file_epuck_pose[1].close();
@@ -58,8 +58,6 @@ void Logger::CloseAll() {
     // FROM EPUCK.CPP
     file_eg.close();
     file_ed.close();
-    file_p8.close();
-    file_p9.close();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -157,8 +155,6 @@ void Logger::fileGeneration() {
     // FROM EPUCK.CPP
     file_eg.open(folder_ + "/data/eg.txt");
     file_ed.open(folder_ + "/data/ed.txt");
-    file_p8.open(folder_ + "/data/p8.txt");
-    file_p9.open(folder_ + "/data/p9.txt");
 
 }
 

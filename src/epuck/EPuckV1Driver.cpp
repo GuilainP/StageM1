@@ -32,7 +32,7 @@ EPuckV1Driver::EPuckV1Driver(Robot& robot, char** arg) : RobotDriver(robot, arg)
 }
 
 EPuckV1Driver::~EPuckV1Driver() {
-    log().CloseAll();
+    log().closeAll();
     stop_threads_ = true;
     // Send a zero velocity command before exiting
     setWheelCommands(robot());
@@ -577,6 +577,6 @@ void EPuckV1Driver::closeFilesIfConnectionLost() {
     prox_sensors_prev_ =  robot().proximity_sensors.ir ;
 
     if(is_the_connection_lost_ == 3) {
-        log().CloseAll();
+        log().closeAll();
     }
 }

@@ -4,9 +4,6 @@
 #include <iostream>
 #include <memory>
 
-enum Controller { setWheelCmd, setVel, setRobVel, followWall, visServo };
-Controller c;
-
 /*****************************/
 /**** Main Program ***********/
 /*****************************/
@@ -23,6 +20,8 @@ void exitLoop(int sig) {
 
 int main(int argc, char** argv) {
 
+    enum Controller { setWheelCmd, setVel, setRobVel, followWall, visServo };
+    Controller c;
 
     Robot robot;
     robot.ip = argv[2];
