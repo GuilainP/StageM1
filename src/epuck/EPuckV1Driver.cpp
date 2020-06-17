@@ -75,7 +75,6 @@ bool EPuckV1Driver::init() {
 
 // TODO
 void EPuckV1Driver::read() {
-    //robot().vision_sensors = showAndSaveRobotImage(img_data_.msg, cnt_iter); 
     std::cout << "\033[1;36m";//write in bold cyan
     std::cout << "\nSTART ITERATION " << cnt_iter <<" \n";
     std::cout << "\033[0m";//reset color
@@ -121,10 +120,6 @@ void EPuckV1Driver::read() {
 
 
 void EPuckV1Driver::sendCmd() {
-      /////////////////////////
-     /////////TIME////////////
-    /////////////////////////
-
     // Sends the command to the epuck motors
     gettimeofday(&cur_time_, NULL);
     time_since_start_ =

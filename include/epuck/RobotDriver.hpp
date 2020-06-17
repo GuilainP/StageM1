@@ -152,8 +152,7 @@ private:
     void closeConnection();
     void proxDataRawValuesToMeters();
     void positionDataCorrection();
-    double thetaIntervalAdjustment(double);
-    double wheelIntervalAdjustment(double);
+    double intervalAdjustment(double);
     void odometry();
 
     unsigned char image_[160*120*2];

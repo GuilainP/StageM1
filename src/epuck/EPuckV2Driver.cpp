@@ -636,9 +636,10 @@ void EPuckV2Driver::positionDataCorrection() {
 
 	robot().current_pose.x = x_pos_;
 	robot().current_pose.y = y_pos_;
-	robot().current_pose.th = thetaIntervalAdjustment(theta_);
-	robot().wheels_state.left_position= wheelIntervalAdjustment(motor_position_data_correct_[0]);//%1000)*(2*M_PI/1000);
-	robot().wheels_state.right_position= wheelIntervalAdjustment(motor_position_data_correct_[1]); //(motor_position_data_correct_[1]%1000)*(2*M_PI/1000);
+	robot().current_pose.th = intervalAdjustment(theta_);
+	robot().wheels_state.left_position= intervalAdjustment(std::fmod(motor_position_data_correct_[0],1000)*(2*M_PI/1000));
+	robot().wheels_state.right_position= intervalAdjustment(std::fmod(motor_position_data_correct_[1],1000)*(2*M_PI/1000));
+
 
 	cur_time = std::chrono::high_resolution_clock::now();
 
@@ -661,7 +662,7 @@ void EPuckV2Driver::positionDataCorrection() {
 
 }
 
-double EPuckV2Driver::thetaIntervalAdjustment(double val){
+double EPuckV2Driver::intervalAdjustment(double val){
     if (val < 0) {
         if (val > -M_PI){
             val = std::fabs(val) + M_PI;
@@ -675,20 +676,4 @@ double EPuckV2Driver::thetaIntervalAdjustment(double val){
         val = -val + M_PI;
 	
 	return val;
-}
-
-double EPuckV2Driver::wheelIntervalAdjustment(double val) {
-	val = std::fmod(val,1000)*(2*M_PI/1000);
-	if(val < 0 ) {
-		if (val > -M_PI){
-            val = std::fabs(val) + M_PI;
-        } else {
-            val = std::fabs(val) - M_PI;
-        } 
-	}
-	if (val > M_PI)
-        val = -val + M_PI;
-	
-	return val;
-
 }
