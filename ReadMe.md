@@ -32,18 +32,17 @@ Télécharger le dossier directement depuis le site , ou le cloner en appliquant
 Lancer CoppeliaSim et ouvrir la scène `e-puck.ttt` contenue dans le dossier StageM1/ 
 
 Se rendre dans le dossier StageM1/build/ et faire les commandes suivantes:
-
-    $ cmake ..
-    $ make
-
+```sh
+$ cmake ..
+$ make
+```
 Pour lancer l'application taper :
 ```sh
-	$ # lancer la simulation
-	$ ./apps/robot setWheelCmd 127.0.0.1 5 -5 
-	$ # pour un robot
-    $ ./apps/robot setWheelCmd 192.168.1.8 50 -50  
+$ # lancer la simulation
+$ ./apps/robot setWheelCmd 127.0.0.1 5 -5 
+$ # pour un robot
+$ ./apps/robot setWheelCmd 192.168.1.8 50 -50  
 ```
-
 
 Application : 
 
