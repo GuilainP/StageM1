@@ -21,7 +21,7 @@ EPuckVREPDriver::EPuckVREPDriver(Robot& robot, char** arg) : RobotDriver(robot, 
 		robot.wheels_command.right_velocity = std::stod(argv[4]);
 	}
 }
- 
+
 bool EPuckVREPDriver::init() {
     client_id_ = simxStart((simxChar*)robot().ip.c_str(), 19997, true, true, 2000, 5);
     std::cout << "clientID = " << client_id_ << std::endl;

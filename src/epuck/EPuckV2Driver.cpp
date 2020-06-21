@@ -12,8 +12,7 @@
 #define MAX_CONNECTION_TRIALS 3
 
 #define WHEEL_DIAMETER 4        // cm.
-#define WHEEL_SEPARATION 5.3    // Separation between wheels (cm).
-#define WHEEL_DISTANCE 0.053    // Distance between wheels in meters (axis length); it's the same value as "WHEEL_SEPARATION" but expressed in meters.
+#define WHEEL_DISTANCE 0.053    // Distance between wheels in meters (axis length).
 #define WHEEL_CIRCUMFERENCE ((WHEEL_DIAMETER*M_PI)/100.0)    // Wheel circumference (meters).
 #define MOT_STEP_DIST (WHEEL_CIRCUMFERENCE/1000.0)      // Distance for each motor step (meters); a complete turn is 1000 steps (0.000125 meters per step (m/steps)).
 #define ROBOT_RADIUS 0.035 // meters.

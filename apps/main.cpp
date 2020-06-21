@@ -4,9 +4,7 @@
 #include <iostream>
 #include <memory>
 
-/*****************************/
-/**** Main Program ***********/
-/*****************************/
+
 
 void incorrectArguments(const int& argc);
 
@@ -15,8 +13,6 @@ void exitLoop(int sig) {
     std::cout << " Loop termination\n";
     signaled = true;
 }
-
-
 
 int main(int argc, char** argv) {
 

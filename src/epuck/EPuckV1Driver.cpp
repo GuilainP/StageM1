@@ -17,13 +17,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 
 #include "datafile.hpp"
-
-#define HERE(X) std::cout << "HI THERE " << X <<  std::endl
 
 EPuckV1Driver::EPuckV1Driver(Robot& robot, char** arg) : RobotDriver(robot, arg) {
     stop_threads_ = false;
@@ -35,6 +32,8 @@ EPuckV1Driver::~EPuckV1Driver() {
     log().closeAll();
     stop_threads_ = true;
     // Send a zero velocity command before exiting
+    robot().wheels_command.left_velocity = 0;
+    robot().wheels_command.right_velocity = 0;
     setWheelCommands(robot());
     sendMotorAndLEDCommandToRobot(motor_command_);
     std::cout << "All good, mate\n";
@@ -81,7 +80,7 @@ void EPuckV1Driver::read() {
     gettimeofday(&prev_time_, NULL);
     //show and save image
     if (camera_active_ == true) {
-        rob_img_ = showAndSaveRobotImage(img_data_.msg, cnt_iter);
+        robot().vision_sensors = showAndSaveRobotImage(img_data_.msg, cnt_iter);
     }
     gettimeofday(&cur_time_, NULL);
     time_since_start_ = (cur_time_.tv_sec - prev_time_.tv_sec) * 1e3 + (cur_time_.tv_usec - prev_time_.tv_usec) * 1e-3;
@@ -97,7 +96,7 @@ void EPuckV1Driver::read() {
         cur_pose_from_enc_ = getCurrPoseFromEncoders(robot().parameters, prev_pose_from_enc_, encoder_left_, encoder_right_, prev_encoder_left_, prev_encoder_right_, log());
     }
     float areaPix;
-    cv::Point baryc = processImageToGetBarycenter(rob_img_ , areaPix);
+    cv::Point baryc = processImageToGetBarycenter(robot().vision_sensors , areaPix);
     cur_pose_from_vis_ = getCurrPoseFromVision(baryc, cur_pose_from_enc_.th, areaPix, log());
     prev_pose_from_enc_ = cur_pose_from_enc_;
     prev_pose_from_vis_ = cur_pose_from_vis_;
@@ -522,7 +521,7 @@ void* EPuckV1Driver::cameraReceptionThread(void* arg) {
                 memcpy(idBlock_buf, &buffer[3], 1);
                 // std::cout << "idBlock : " << idBlock_buf << std::endl;
                 img_data_.id_block = atoi(idBlock_buf);
-				//std::cout << "id_block: " << imgData.id_block << std::endl;
+				//std::cout << "id_block: " << img_data_.id_block << std::endl;
                 memcpy(&img_data_.msg[(img_data_.id_block) * img_msg_size],
                        &buffer[8], img_msg_size);
 				//for(int i=0; i<10; ++i) {
@@ -559,10 +558,7 @@ void EPuckV1Driver::saveData(Logger& log) {
     log.addIn(log.file_ir[5], robot().proximity_sensors.ir[5]);
     log.addIn(log.file_ir[6], robot().proximity_sensors.ir[6]);
     log.addIn(log.file_ir[7], robot().proximity_sensors.ir[7]);
-    /*
-    log.addIn(log.file_p8, prox_sensors_[8]);
-    log.addIn(log.file_p9, prox_sensors_[9]);
-    */
+
 }
 
 void EPuckV1Driver::closeFilesIfConnectionLost() {

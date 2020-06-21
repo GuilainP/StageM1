@@ -104,7 +104,6 @@ private:
     double time_since_start_;
 
     char motor_command_[15];      // command for the two motors
-    cv::Mat rob_img_;
     Pose prev_pose_from_enc_, cur_pose_from_enc_, prev_pose_from_vis_, cur_pose_from_vis_, init_pose_;
 
     int speed_left_, speed_right_;
