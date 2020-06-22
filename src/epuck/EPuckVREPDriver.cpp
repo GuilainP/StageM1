@@ -27,8 +27,6 @@ bool EPuckVREPDriver::init() {
         simxFinish(client_id_);
         return false;
     } else {
-        minr_ = 0; minl_ =0;
-        maxr_ = 0; maxl_ = 0;
         std::cout << ("Connected to remote API server") << std::endl;
 
         simxSynchronous(client_id_, true);

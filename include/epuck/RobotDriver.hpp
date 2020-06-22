@@ -90,7 +90,7 @@ private:
 
     /* Variables of main thread */
 
-    int is_the_connection_lost_;
+    int is_connection_lost_;
     typedef int SOCKET;
     SOCKET camera_socket_, command_sending_socket_, sensor_receiving_socket_;
     char all_sensors_[100]; // Buffer de reception des capteurs
@@ -151,7 +151,6 @@ private:
     void proxDataRawValuesToMeters();
     void positionDataCorrection();
     double intervalAdjustment(double);
-    void odometry();
 
     unsigned char image_[160*120*2];
 
@@ -230,11 +229,8 @@ private:
     float epuck_position_[3];
     float left_joint_position_, right_joint_position_;
     float left_joint_velocity_[3], right_joint_velocity_[3];
-    float left_joint_lin_[3], right_joint_lin_[3];
     float euler_angles_[3];
     uint8_t detection_state_ir_[8];
     float detected_point_ir_[8][3];
     uint8_t* sim_image_;
-    
-    double minl_,maxl_,minr_,maxr_;
 };

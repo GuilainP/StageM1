@@ -25,7 +25,7 @@
 EPuckV1Driver::EPuckV1Driver(Robot& robot) : RobotDriver(robot) {
     stop_threads_ = false;
     camera_active_ = true;
-    is_the_connection_lost_ = 0;
+    is_connection_lost_ = 0;
 }
 
 EPuckV1Driver::~EPuckV1Driver() {
@@ -563,11 +563,11 @@ void EPuckV1Driver::saveData(Logger& log) {
 
 void EPuckV1Driver::closeFilesIfConnectionLost() {
     if (prox_sensors_prev_ ==  robot().proximity_sensors.ir) {
-        is_the_connection_lost_++;
+        is_connection_lost_++;
     }
     prox_sensors_prev_ =  robot().proximity_sensors.ir ;
 
-    if(is_the_connection_lost_ == 3) {
+    if(is_connection_lost_ == 3) {
         log().closeAll();
     }
 }
