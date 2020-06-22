@@ -12,14 +12,8 @@
 #include <thread>
 #include <chrono>
 
-EPuckVREPDriver::EPuckVREPDriver(Robot& robot, char** arg) : RobotDriver(robot, arg)  {
+EPuckVREPDriver::EPuckVREPDriver(Robot& robot) : RobotDriver(robot)  {
     cnt_iter = 1;
-
-    std::string mode = argv[1];
-    if (mode == "setWheelCmd") {
-		robot.wheels_command.left_velocity = std::stod(argv[3]);
-		robot.wheels_command.right_velocity = std::stod(argv[4]);
-	}
 }
 
 bool EPuckVREPDriver::init() {
@@ -248,8 +242,8 @@ void EPuckVREPDriver::dataToRobot() {
         }
     }
 
-    robot().wheels_state.left_velocity = (-1)*left_joint_velocity_[0];
-    robot().wheels_state.right_velocity= (-1)*right_joint_velocity_[0];
+    robot().wheels_state.left_velocity = left_joint_velocity_[1];
+    robot().wheels_state.right_velocity= right_joint_velocity_[1];
 
     robot().wheels_state.left_position = left_joint_position_;
     robot().wheels_state.right_position = right_joint_position_;

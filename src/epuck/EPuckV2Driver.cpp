@@ -21,7 +21,7 @@
 #define GYRO_RAW2DPS (250.0/32768.0f)   //250DPS (degrees per second) scale for int16 raw value
 #define STANDARD_GRAVITY 9.80665f
 
-EPuckV2Driver::EPuckV2Driver(Robot& robot, char** arg) : RobotDriver(robot, arg) {
+EPuckV2Driver::EPuckV2Driver(Robot& robot) : RobotDriver(robot) {
 	robot.vision_sensors = cv::Mat(120, 160, CV_8UC3);
 	cnt_iter == 1;
 
@@ -38,13 +38,6 @@ EPuckV2Driver::EPuckV2Driver(Robot& robot, char** arg) : RobotDriver(robot, arg)
 
     overflow_count_left_ = 0, overflow_count_right_ = 0;
     gyro_offset_[0]=0, gyro_offset_[1]=0, gyro_offset_[2]=0; // Used if making an initial calibration of the gyro.
-
-	std::string mode = argv[1];
-    if (mode == "setWheelCmd") {
-		robot.wheels_command.left_velocity = std::stod(argv[3]);
-		robot.wheels_command.right_velocity = std::stod(argv[4]);
-	}
-
 }
 
 EPuckV2Driver::~EPuckV2Driver() {

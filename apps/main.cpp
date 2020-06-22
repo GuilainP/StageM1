@@ -24,11 +24,11 @@ int main(int argc, char** argv) {
     std::unique_ptr<RobotDriver> driver;
 
     if(robot.ip.size() == 11 ) {
-        driver = std::make_unique<EPuckV1Driver>(robot,argv);
+        driver = std::make_unique<EPuckV1Driver>(robot);
     } else if (robot.ip.size() == 13){
-        driver = std::make_unique<EPuckV2Driver>(robot,argv);
+        driver = std::make_unique<EPuckV2Driver>(robot);
     } else if (robot.ip == "127.0.0.1"){  
-        driver = std::make_unique<EPuckVREPDriver>(robot,argv);
+        driver = std::make_unique<EPuckVREPDriver>(robot);
     } else {
         return -1;
     }

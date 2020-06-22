@@ -39,7 +39,7 @@
 
 class RobotDriver {
 public:
-    RobotDriver(Robot& robot, char** arg) : robot_(robot), argv(arg) {
+    RobotDriver(Robot& robot) : robot_(robot) {
     }
     virtual ~RobotDriver() = default;
 
@@ -54,7 +54,6 @@ public:
 
 protected:
     int cnt_iter;
-    char** argv;
 
     // time variables
     std::chrono::_V2::system_clock::time_point start_time, cur_time, prev_time;
@@ -67,7 +66,7 @@ private:
 
 class EPuckV1Driver : public RobotDriver {
 public:
-    EPuckV1Driver(Robot& robot, char** arg);
+    EPuckV1Driver(Robot& robot);
     virtual ~EPuckV1Driver();
 
     bool init() override;
@@ -137,7 +136,7 @@ private:
 
 class EPuckV2Driver : public RobotDriver {
 public:
-    EPuckV2Driver(Robot& robot, char** arg);
+    EPuckV2Driver(Robot& robot);
     virtual ~EPuckV2Driver();
 
     bool init() override;
@@ -208,7 +207,7 @@ private:
 
 class EPuckVREPDriver : public RobotDriver {
 public:
-    EPuckVREPDriver(Robot& robot, char** arg);
+    EPuckVREPDriver(Robot& robot);
     virtual ~EPuckVREPDriver();
 
     bool init() override;

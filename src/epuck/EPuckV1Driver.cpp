@@ -22,7 +22,7 @@
 
 #include "datafile.hpp"
 
-EPuckV1Driver::EPuckV1Driver(Robot& robot, char** arg) : RobotDriver(robot, arg) {
+EPuckV1Driver::EPuckV1Driver(Robot& robot) : RobotDriver(robot) {
     stop_threads_ = false;
     camera_active_ = true;
     is_the_connection_lost_ = 0;
@@ -74,9 +74,9 @@ bool EPuckV1Driver::init() {
 
 // TODO
 void EPuckV1Driver::read() {
-    std::cout << "\033[1;36m";//write in bold cyan
+    std::cout << COLOR_COUT_BLUE_BRIGHT;//write in bold cyan
     std::cout << "\nSTART ITERATION " << cnt_iter <<" \n";
-    std::cout << "\033[0m";//reset color
+    std::cout << COLOR_COUT_RESET;//reset color
     gettimeofday(&prev_time_, NULL);
     //show and save image
     if (camera_active_ == true) {
