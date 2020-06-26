@@ -44,7 +44,7 @@ Pose getCurrPoseFromVision(const cv::Point & baryctr, const float & theta, const
 
 
 /**** Convert IR distances to points x y in robot frame, estimate line parameters y = mx +p in robot frame and then convert everything to world frame ****/
-void convertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld);
+void convertIRPointsForWallFollowing(RobotParameters rp, const std::array<double, 10> dist, const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld);
 
 /**** Draws a map with world frame and robot ****/
 void drawMapWithRobot(RobotParameters rp, const Pose & rPoseEnc, const Pose & rPoseVis, const cv::Point2f ProxInWFr[10], const float mWall, const float pWall);
@@ -66,11 +66,8 @@ void controlRobotWithVisualServoing(const cv::Point & baryc, float & vel, float 
 // make robot follow a wall using infrared measurements for ten seconds
 void controlRobotToFollowWall(float &vel, float &omega);
 
-//using IR calibration convert the IR values to metric distances
-void infraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log);
-
 //using the robot parameters, map metric distances to the robot frame
-void metricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall);
+void metricDistanceToRobFrameCoordinates(RobotParameters rp, const std::array<double,10> dist, const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall);
 
 /**** Set commands to the wheel motors for 10 seconds****/
 void setWheelCommands(Robot& robot);

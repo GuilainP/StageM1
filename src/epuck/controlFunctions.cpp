@@ -10,7 +10,7 @@ void setVelocities(Robot& robot) {
     std::cout << "SetRobotVelocities wheel speeds are "<< robot.wheels_command.left_velocity << " " << robot.wheels_command.right_velocity;
 }
 /**** Convert IR distances to points x y in robot frame, estimate line parameters y = mx +p in robot frame and then convert everything to world frame ****/
-void convertIRPointsForWallFollowing(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld) {
+void convertIRPointsForWallFollowing(RobotParameters rp, const std::array<double, 10> dist, const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mRob, float & pRob, float & mWorld, float & pWorld) {
     cv::Point2f ProxInRobFrame[10];
     for (int i = 0; i < 10; i++) {
         std::cout << "the angle of IR number " << i << " is " << rp.theta[i] <<" and the distance is " << dist[i] << std::endl;
@@ -51,13 +51,10 @@ Pose getCurrPoseFromEncoders(RobotParameters rp, const Pose & prevRobPose, const
 
     //log the data
 
-    log.addIn(log.file_v, linVel);
+    log.addIn(log.file_v, linVel); // Operationnal linear speed 
     log.addIn(log.file_w, angVel);
     log.addIn(log.file_dx, dx/sampleTime);
     log.addIn(log.file_dy, dy/sampleTime);
-    log.addIn(log.file_x, curRobPose.x);
-    log.addIn(log.file_y, curRobPose.y);
-    log.addIn(log.file_th, curRobPose.th);
     log.addIn(log.file_time, sampleTime); //TODO this should also be read from logs
 
     std::cout << "curRobPose from encoders is x " << curRobPose.x << " y " << curRobPose.y << std::endl;
@@ -70,7 +67,6 @@ Pose getCurrPoseFromVision(const cv::Point & baryctr, const float & theta, const
     curRobPose.setPose(.32, 0., M_PI);//TODOM2
 
     //log the data
-
     log.addIn(log.file_x_vision, curRobPose.x);
     log.addIn(log.file_y_vision, curRobPose.y);
     log.addIn(log.file_th_vision, curRobPose.th);
@@ -268,45 +264,9 @@ void controlRobotToFollowWall(float &vel, float &omega) {
     omega = 0;
 
 }
-void infraRedValuesToMetricDistance(RobotParameters rp, const int ProxS[10], float dist[10], Logger& log) {
-    // infrared values
-    for (int i = 0; i < 10; i++) {
-        std::cout << "IRed " << i << " : " <<  ProxS[i] << " ";
-    }
-    std::cout << std::endl;
-    for (int i = 0; i < 8; i++) {
-        if (ProxS[i] != 0) {
-            dist[i] = 1.79 * pow(ProxS[i], -.681);
-        } else {
-            dist[i] = rp.dist_max;
-        }
-    }
-    for (int i = 8; i < 10; i++) {
-        dist[i] = 0.1495 * exp(-.002875 * ProxS[i]) +
-                  0.05551 * exp(-.0002107 * ProxS[i]);
-    }  
-    for (int i = 0; i < 10; i++) {
-        if (dist[i] >= rp.dist_max) {
-            dist[i] = 1000;// rp.distMax;
-        }
-        std::cout << "dist[" << i << "] -> " << dist[i] << std::endl;
-    }
 
-    //log the data
-    
-    log.addIn(log.file_distances, dist[0],"\t");
-    log.addIn(log.file_distances, dist[1],"\t");
-    log.addIn(log.file_distances, dist[2],"\t");
-    log.addIn(log.file_distances, dist[3],"\t");
-    log.addIn(log.file_distances, dist[4],"\t");
-    log.addIn(log.file_distances, dist[5],"\t");
-    log.addIn(log.file_distances, dist[6],"\t");
-    log.addIn(log.file_distances, dist[7],"\t");
-    log.addIn(log.file_distances, dist[8],"\t");
-    log.addIn(log.file_distances, dist[9]);
 
-}
-void metricDistanceToRobFrameCoordinates(RobotParameters rp, const float dist[10], const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall) {
+void metricDistanceToRobFrameCoordinates(RobotParameters rp, const std::array<double, 10> dist, const Pose & rPoseEnc, cv::Point2f ProxInWFr[10], float & mWall, float & pWall) {
     cv::Point2f ProxInRobFrame[10];
     for (int i = 0; i < 10; i++) {
         ProxInRobFrame[i].x = (dist[i] + rp.robot_radius) * cos(rp.theta[i]);

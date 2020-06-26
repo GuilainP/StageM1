@@ -72,6 +72,8 @@ bool EPuckV1Driver::init() {
     return true;
 }
 
+
+
 // TODO
 void EPuckV1Driver::read() {
     std::cout << COLOR_COUT_BLUE_BRIGHT;//write in bold cyan
@@ -80,7 +82,7 @@ void EPuckV1Driver::read() {
     gettimeofday(&prev_time_, NULL);
     //show and save image
     if (camera_active_ == true) {
-        robot().vision_sensors = showAndSaveRobotImage(img_data_.msg, cnt_iter);
+        showAndSaveRobotImage();
     }
     gettimeofday(&cur_time_, NULL);
     time_since_start_ = (cur_time_.tv_sec - prev_time_.tv_sec) * 1e3 + (cur_time_.tv_usec - prev_time_.tv_usec) * 1e-3;
@@ -103,11 +105,10 @@ void EPuckV1Driver::read() {
 
     receiveSensorMeasures(); // receive data from encoders and proximity sensors///////////////////////////////////////////////////////////////////////////////////////////////////////////
     splitSensorMeasures(); // splits measures and converts them to integer///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    float dist[10];
-    infraRedValuesToMetricDistance(robot().parameters, prox_sensors_, dist, log());
+    infraRedValuesToMetricDistance();
     cv::Point2f ProxInWFrame[10];
     float mRob, pRob, mWorld, pWorld;
-    convertIRPointsForWallFollowing(robot().parameters, dist, cur_pose_from_enc_, ProxInWFrame, mRob, pRob, mWorld, pWorld);
+    convertIRPointsForWallFollowing(robot().parameters, robot().proximity_sensors.distances, cur_pose_from_enc_, ProxInWFrame, mRob, pRob, mWorld, pWorld);
     drawMapWithRobot(robot().parameters, cur_pose_from_enc_, cur_pose_from_vis_, ProxInWFrame, mWorld, pWorld);
 
     
@@ -145,9 +146,17 @@ void EPuckV1Driver::sendCmd() {
 	gettimeofday(&prev_time_, NULL);
 };
 
-// Empty (not needed in EPuckV1Driver)
-void EPuckV1Driver::getVisionSensor(Robot& robot) {
-    std::cout << "";
+/**** Show image from the robot camera and save it on the disk ****/
+void EPuckV1Driver::showAndSaveRobotImage() {
+    cv::Mat rawImg =  cv::Mat(240, 320, CV_8UC3, img_data_.msg );
+    cv::cvtColor(rawImg, robot().vision_sensors , cv::COLOR_RGB2BGRA); 
+    //show the image
+    cv::namedWindow( "Robot image", cv::WINDOW_AUTOSIZE ); // Create a window for display.
+    cv::moveWindow( "Robot image", 0,0); // Move window 
+    cv::imshow( "Robot image", robot().vision_sensors );                // Show the image inside it.
+    cv::waitKey(1);
+    //save the image on disk
+    cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(cnt_iter).length(), '0').append( std::to_string(cnt_iter)) + ".png", robot().vision_sensors);
 }
 
 
@@ -547,9 +556,12 @@ void EPuckV1Driver::saveData(Logger& log) {
     for(int i = 0; i<8 ; ++i) {
         robot().proximity_sensors.ir[i] = prox_sensors_[i];
     }
-
-    log.addIn(log.file_eg, encoder_left_);
-    log.addIn(log.file_ed, encoder_right_);
+    //cur_pose_from_enc_
+    log.addIn(log.file_epuck_pose[0], cur_pose_from_enc_.x);
+    log.addIn(log.file_epuck_pose[1], cur_pose_from_enc_.y);
+    log.addIn(log.file_epuck_pose[2], cur_pose_from_enc_.th);
+    log.addIn(log.file_epuck_left_wheel_position, encoder_left_);
+    log.addIn(log.file_epuck_right_wheel_position, encoder_right_);
     log.addIn(log.file_ir[0], robot().proximity_sensors.ir[0]);
     log.addIn(log.file_ir[1], robot().proximity_sensors.ir[1]);
     log.addIn(log.file_ir[2], robot().proximity_sensors.ir[2]);
@@ -570,4 +582,41 @@ void EPuckV1Driver::closeFilesIfConnectionLost() {
     if(is_connection_lost_ == 3) {
         log().closeAll();
     }
+}
+
+//using IR calibration convert the IR values to metric distances
+void EPuckV1Driver::infraRedValuesToMetricDistance() {
+    // infrared values
+    for (int i = 0; i < 10; i++) {
+        std::cout << "IRed " << i << " : " <<  prox_sensors_[i] << " ";
+    }
+    std::cout << std::endl;
+    for (int i = 0; i < 8; i++) {
+        if (prox_sensors_[i] != 0) {
+            robot().proximity_sensors.distances[i] = 1.79 * pow(prox_sensors_[i], -.681);
+        } else {
+            robot().proximity_sensors.distances[i] = robot().parameters.dist_max;
+        }
+    }
+    for (int i = 8; i < 10; i++) {
+        robot().proximity_sensors.distances[i] = 0.1495 * exp(-.002875 * prox_sensors_[i]) +
+                  0.05551 * exp(-.0002107 * prox_sensors_[i]);
+    }  
+    for (int i = 0; i < 10; i++) {
+        if (robot().proximity_sensors.distances[i] >= robot().parameters.dist_max) {
+            robot().proximity_sensors.distances[i] = 1000;// robot().parameters.distMax;
+        }
+        std::cout << "dist[" << i << "] -> " << robot().proximity_sensors.distances[i] << std::endl;
+    }
+    //log the data
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[0],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[1],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[2],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[3],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[4],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[5],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[6],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[7],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[8],"\t");
+    log().addIn(log().file_distances, robot().proximity_sensors.distances[9]);
 }

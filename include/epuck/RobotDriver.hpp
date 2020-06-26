@@ -46,13 +46,12 @@ public:
     virtual bool init() = 0;
     virtual void read() = 0;
     virtual void sendCmd() = 0;
-    virtual void getVisionSensor(Robot& robot) = 0;
-    cv::Mat showAndSaveRobotImage(unsigned char* imgData, const int& cnt_it);
-
+    
     Robot& robot();
     Logger& log();
 
 protected:
+    virtual void showAndSaveRobotImage() = 0;
     int cnt_iter;
 
     // time variables
@@ -60,6 +59,8 @@ protected:
     std::chrono::duration<double> time_since_start, time_iteration;
 
 private:
+    
+
     Robot& robot_;
     Logger log_; 
 };
@@ -72,9 +73,10 @@ public:
     bool init() override;
     void read() override;
     void sendCmd() override;
-    void getVisionSensor(Robot& robot) override ; // Empty (not needed in EPuckV1Driver)
+    
 
 private:
+    void showAndSaveRobotImage() override;
     void initCamera(const std::string& epuck_ip);
     void initSocketOpening(const std::string& epuck_ip);
     void openCameraSocket();
@@ -87,6 +89,7 @@ private:
     void closeSocket(int NOM_SOCKET);
     void openCommandSendingSocket(const std::string& epuck_ip);
     void closeFilesIfConnectionLost(); // use to identified the state of the connection
+    void infraRedValuesToMetricDistance(); //using IR calibration convert the IR values to metric distances
 
     /* Variables of main thread */
 
@@ -143,13 +146,14 @@ public:
     void read() override;
     void sendCmd() override;
     
-    void getVisionSensor(Robot& robot) override ;
     
 private:
+    void showAndSaveRobotImage() override;
     void printSensors();
     void closeConnection();
     void proxDataRawValuesToMeters();
     void positionDataCorrection();
+    void RGB565toRGB888(int width, int height, unsigned char *src, unsigned char *dst);
     double intervalAdjustment(double);
 
     unsigned char image_[160*120*2];
@@ -212,10 +216,10 @@ public:
     bool init() override;
     void read() override;
     void sendCmd() override;
-    void getVisionSensor(Robot& robot) override ;
+    
 
 private:
-
+    void showAndSaveRobotImage() override;
     void printSensors();
     void dataToRobot();
     

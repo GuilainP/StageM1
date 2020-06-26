@@ -428,6 +428,7 @@ void EPuckV2Driver::read() {
 		expected_recv_packets_ = 1;
 	}
 	printSensors();
+	showAndSaveRobotImage();
 };
 
 void EPuckV2Driver::sendCmd() {
@@ -461,7 +462,7 @@ void EPuckV2Driver::sendCmd() {
 
 };
 
-void RGB565toRGB888(int width, int height, unsigned char *src, unsigned char *dst) {
+void EPuckV2Driver::RGB565toRGB888(int width, int height, unsigned char *src, unsigned char *dst) {
     int line, column;
     int index_src=0, index_dst=0;
 
@@ -475,14 +476,14 @@ void RGB565toRGB888(int width, int height, unsigned char *src, unsigned char *ds
     }
 }
 
-void EPuckV2Driver::getVisionSensor(Robot& robot) {
-	RGB565toRGB888(160, 120, &image_[0], robot.vision_sensors.data);
+void EPuckV2Driver::showAndSaveRobotImage() {
+	RGB565toRGB888(160, 120, &image_[0], robot().vision_sensors.data);
 	cv::namedWindow("Camera", cv::WINDOW_NORMAL);
 	cv::resizeWindow("Camera", 160*2, 120*2);
-	cv::imshow("Camera", robot.vision_sensors);
+	cv::imshow("Camera", robot().vision_sensors);
 	cv::waitKey(1);
 	
-	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(cnt_iter).length(), '0').append( std::to_string(cnt_iter)) + ".png", robot.vision_sensors);
+	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(cnt_iter).length(), '0').append( std::to_string(cnt_iter)) + ".png", robot().vision_sensors);
 
 	++cnt_iter;
 }

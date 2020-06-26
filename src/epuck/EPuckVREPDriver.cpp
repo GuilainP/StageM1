@@ -106,6 +106,7 @@ void EPuckVREPDriver::read() {
     simxGetPingTime(client_id_, &ping_time_);
 
     printSensors();
+    showAndSaveRobotImage();
 }
 
 void EPuckVREPDriver::sendCmd() {
@@ -115,15 +116,15 @@ void EPuckVREPDriver::sendCmd() {
     simxPauseCommunication(client_id_, 0);
 }
 
-void EPuckVREPDriver::getVisionSensor(Robot& robot) {
+void EPuckVREPDriver::showAndSaveRobotImage() {
 	cv::Mat img(res_[0], res_[1], CV_8UC3, (unsigned char*) sim_image_);
-	cv::flip(img, robot.vision_sensors, 0);
-    cv::cvtColor(robot.vision_sensors, robot.vision_sensors, cv::COLOR_BGR2RGB);
+	cv::flip(img, robot().vision_sensors, 0);
+    cv::cvtColor(robot().vision_sensors, robot().vision_sensors, cv::COLOR_BGR2RGB);
 	cv::namedWindow("Camera", cv::WINDOW_AUTOSIZE);
-	cv::imshow("Camera", robot.vision_sensors);
+	cv::imshow("Camera", robot().vision_sensors);
 	cv::waitKey(1);
     
-	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(cnt_iter).length(), '0').append( std::to_string(cnt_iter)) + ".png", robot.vision_sensors);
+	cv::imwrite(log().folder_ + "/image/image" +  std::string( 4 - std::to_string(cnt_iter).length(), '0').append( std::to_string(cnt_iter)) + ".png", robot().vision_sensors);
 
 	++cnt_iter;
 }

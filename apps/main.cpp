@@ -89,8 +89,6 @@ int main(int argc, char** argv) {
     while (true) {
         driver->read();
 
-        driver->getVisionSensor(robot);
-
         //control robot
         if (c == setWheelCmd) {
             // Euh , la fonction ici ne sers pas à grand chose
@@ -115,7 +113,7 @@ int main(int argc, char** argv) {
             break;
         }
     }
-
+    
 }
 
 void incorrectArguments(const int& argc) {

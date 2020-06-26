@@ -5,8 +5,8 @@
 
 struct Pose {
     Pose(){}
-    Pose(double a, double b, double c) {setPose(a,b,c);}
-    void setPose(double a, double b, double c) {x=a; y=b; th=c;}
+    Pose(double x, double y, double th) {setPose(x,y,th);}
+    void setPose(double x,double y, double th) {this->x=x; this->y=y; this->th=th;}
     double x{0}, y{0}, th{0};
 };
 
