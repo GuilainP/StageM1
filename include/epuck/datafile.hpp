@@ -22,15 +22,11 @@ public:
     std::ofstream file_epuck_left_wheel_velocity;
     std::ofstream file_epuck_right_wheel_velocity;
 
-    // FOR EPUCKV1 UNTOUCHED
     std::ofstream file_v;
     std::ofstream file_w;
     std::ofstream file_dx;
     std::ofstream file_dy;
     std::ofstream file_dth;
-    std::ofstream file_x;
-    std::ofstream file_y;
-    std::ofstream file_th;
     std::ofstream file_time;
 
     std::ofstream file_x_vision;
@@ -39,6 +35,4 @@ public:
 
     std::ofstream file_distances;
 
-    std::ofstream file_eg;
-    std::ofstream file_ed;
 };

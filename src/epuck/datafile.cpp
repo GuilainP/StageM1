@@ -44,9 +44,7 @@ void Logger::closeAll() {
     file_dy.close();
     file_v.close();
     file_w.close();
-    file_x.close();
-    file_y.close();
-    file_th.close();
+
     file_time.close();
 
     file_x_vision.close();
@@ -54,10 +52,6 @@ void Logger::closeAll() {
     file_th_vision.close();
 
     file_distances.close();
-
-    // FROM EPUCK.CPP
-    file_eg.close();
-    file_ed.close();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -141,9 +135,6 @@ void Logger::fileGeneration() {
     file_w.open(folder_ + "/data/w.txt"); 
     file_dx.open(folder_ + "/data/dx.txt");
     file_dy.open(folder_ + "/data/dy.txt"); 
-    file_x.open(folder_ + "/data/xEnc.txt"); 
-    file_y.open(folder_ + "/data/yEnc.txt"); 
-    file_th.open(folder_ + "/data/thetaEnc.txt"); 
     file_time.open(folder_ + "/data/time.txt");
 
     file_x_vision.open(folder_ + "/data/xVis.txt");
@@ -151,10 +142,6 @@ void Logger::fileGeneration() {
     file_th_vision.open(folder_ + "/data/thetaVis.txt");
 
     file_distances.open(folder_ + "/data/distances.txt");
-
-    // FROM EPUCK.CPP
-    file_eg.open(folder_ + "/data/eg.txt");
-    file_ed.open(folder_ + "/data/ed.txt");
 
 }
 
