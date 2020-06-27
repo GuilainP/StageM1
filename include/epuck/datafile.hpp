@@ -10,7 +10,7 @@ public:
 
     void folderGeneration(); // folder name (current time)
     void fileGeneration();
-    void addIn(std::ofstream& file , double value, std::string endline=""); // add data to file (end line)
+    void addIn(std::ofstream& file , double value, std::string endline="\n"); // add data to file (end line)
     void closeAll();
 
     std::string folder_;
@@ -22,6 +22,8 @@ public:
     std::ofstream file_epuck_left_wheel_velocity;
     std::ofstream file_epuck_right_wheel_velocity;
 
+    std::ofstream file_distances;
+
     std::ofstream file_v;
     std::ofstream file_w;
     std::ofstream file_dx;
@@ -32,7 +34,5 @@ public:
     std::ofstream file_x_vision;
     std::ofstream file_y_vision;
     std::ofstream file_th_vision;
-
-    std::ofstream file_distances;
 
 };

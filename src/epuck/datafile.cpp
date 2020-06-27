@@ -147,10 +147,6 @@ void Logger::fileGeneration() {
 
 void Logger::addIn(std::ofstream& file, double value, std::string endline) {
     if (file.is_open()) {
-        if(endline == "") {
-            file << value << "\n";
-        } else {
-            file << value << endline ;
-        }
+        file << value << endline ;
     }
 }
