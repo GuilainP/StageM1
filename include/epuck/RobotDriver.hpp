@@ -152,7 +152,7 @@ private:
     void printSensors();
     void closeConnection();
     void proxDataRawValuesToMeters();
-    void positionDataCorrection();
+    void positionDataCorrectionOdemetryAndWheelsSpeed();
     void RGB565toRGB888(int width, int height, unsigned char *src, unsigned char *dst);
     double intervalAdjustment(double);
 
