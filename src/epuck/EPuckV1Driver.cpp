@@ -112,7 +112,7 @@ void EPuckV1Driver::read() {
     drawMapWithRobot(robot().parameters, cur_pose_from_enc_, cur_pose_from_vis_, ProxInWFrame, mWorld, pWorld);
 
     
-    saveData(log());
+    saveData();
     closeFilesIfConnectionLost();
 
 
@@ -551,25 +551,25 @@ void* EPuckV1Driver::cameraReceptionThread(void* arg) {
     pthread_exit(NULL);
 }
 // SPECIFIC FUNCTIONS
-void EPuckV1Driver::saveData(Logger& log) {
+void EPuckV1Driver::saveData() {
 
     for(int i = 0; i<8 ; ++i) {
         robot().proximity_sensors.ir[i] = prox_sensors_[i];
     }
     //cur_pose_from_enc_
-    log.addIn(log.file_epuck_pose[0], cur_pose_from_enc_.x);
-    log.addIn(log.file_epuck_pose[1], cur_pose_from_enc_.y);
-    log.addIn(log.file_epuck_pose[2], cur_pose_from_enc_.th);
-    log.addIn(log.file_epuck_left_wheel_position, encoder_left_);
-    log.addIn(log.file_epuck_right_wheel_position, encoder_right_);
-    log.addIn(log.file_ir[0], robot().proximity_sensors.ir[0]);
-    log.addIn(log.file_ir[1], robot().proximity_sensors.ir[1]);
-    log.addIn(log.file_ir[2], robot().proximity_sensors.ir[2]);
-    log.addIn(log.file_ir[3], robot().proximity_sensors.ir[3]);
-    log.addIn(log.file_ir[4], robot().proximity_sensors.ir[4]);
-    log.addIn(log.file_ir[5], robot().proximity_sensors.ir[5]);
-    log.addIn(log.file_ir[6], robot().proximity_sensors.ir[6]);
-    log.addIn(log.file_ir[7], robot().proximity_sensors.ir[7]);
+    log().addIn(log().file_epuck_pose[0], cur_pose_from_enc_.x);
+    log().addIn(log().file_epuck_pose[1], cur_pose_from_enc_.y);
+    log().addIn(log().file_epuck_pose[2], cur_pose_from_enc_.th);
+    log().addIn(log().file_epuck_left_wheel_position, encoder_left_);
+    log().addIn(log().file_epuck_right_wheel_position, encoder_right_);
+    log().addIn(log().file_ir[0], robot().proximity_sensors.ir[0]);
+    log().addIn(log().file_ir[1], robot().proximity_sensors.ir[1]);
+    log().addIn(log().file_ir[2], robot().proximity_sensors.ir[2]);
+    log().addIn(log().file_ir[3], robot().proximity_sensors.ir[3]);
+    log().addIn(log().file_ir[4], robot().proximity_sensors.ir[4]);
+    log().addIn(log().file_ir[5], robot().proximity_sensors.ir[5]);
+    log().addIn(log().file_ir[6], robot().proximity_sensors.ir[6]);
+    log().addIn(log().file_ir[7], robot().proximity_sensors.ir[7]);
 
 }
 
