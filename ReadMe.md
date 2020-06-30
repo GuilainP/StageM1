@@ -57,5 +57,17 @@ Pour arrêter le programme , taper ctrl + c dans le terminal.
 L' e-puck de la scène a été modifié pour mieux correspondre au robot réel.
 Vous avez la liberté de modifier la scène pour faire vos propres observations.
 
+Ressource utilisées :
 
+E-puck -puck version 1 :    
+* https://www.gctronic.com/doc/index.php/E-Puck
+* https://gitlab.com/umrob/epuck-client
 
+E-puck version 2 :
+* https://www.gctronic.com/doc/index.php/e-puck2
+* https://www.gctronic.com/doc/index.php?title=e-puck2_PC_side_development
+* https://github.com/gctronic/epuck_driver_cpp/blob/e-puck2_wifi/src/epuck2_driver_cpp.cpp
+
+E-puck CoppeliaSim (Vrep) :
+* https://www.coppeliarobotics.com/helpFiles/en/remoteApiClientSide.htm
+* https://www.coppeliarobotics.com/helpFiles/en/remoteApiFunctions.htm
