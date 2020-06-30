@@ -57,7 +57,7 @@ Pour arrêter le programme , taper ctrl + c dans le terminal.
 L' e-puck de la scène a été modifié pour mieux correspondre au robot réel.
 Vous avez la liberté de modifier la scène pour faire vos propres observations.
 
-Ressource utilisées :
+Ressources utilisées :
 
 E-puck -puck version 1 :    
 * https://www.gctronic.com/doc/index.php/E-Puck
