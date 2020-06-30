@@ -81,7 +81,7 @@ private:
     void initSocketOpening(const std::string& epuck_ip);
     void openCameraSocket();
     void openSensorReceivingSocket();
-    void saveData(Logger& log);
+    void saveData();
     void* cameraReceptionThread(void* arg);
     void splitSensorMeasures();
     void receiveSensorMeasures();
