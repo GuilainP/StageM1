@@ -489,7 +489,7 @@ void EPuckV2Driver::showAndSaveRobotImage() {
 }
 
 void EPuckV2Driver::printSensors() {
-	positionDataCorrectionOdemetryAndWheelsSpeed();
+	positionDataCorrectionOdometryAndWheelsSpeed();
 	proxDataRawValuesToMeters();
 
 	cur_time = std::chrono::high_resolution_clock::now();
@@ -583,7 +583,7 @@ void EPuckV2Driver::proxDataRawValuesToMeters() {
 }
 
 
-void EPuckV2Driver::positionDataCorrectionOdemetryAndWheelsSpeed() {
+void EPuckV2Driver::positionDataCorrectionOdometryAndWheelsSpeed() {
 
 	if((left_steps_raw_prev_>0) && (motor_steps_[0]<0) && (abs(motor_steps_[0]-left_steps_raw_prev_)>30000)) {     // Overflow detected (positive).
 		overflow_count_left_++;
